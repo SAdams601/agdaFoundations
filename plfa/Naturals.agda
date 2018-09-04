@@ -169,4 +169,4 @@ data Bin : Set where
   x0_ : Bin → Bin
   x1_ : Bin → Bin
 
-inc : Bin → Bin
+--inc : Bin → Bin
