@@ -11,10 +11,15 @@ seven = suc (suc (suc (suc (suc (suc (suc zero))))))
 import Relation.Binary.PropositionalEquality as Eq
 open Eq using (_≡_; refl)
 open Eq.≡-Reasoning using (begin_; _≡⟨⟩_; _∎)
-
+{-
 _+_ : ℕ → ℕ → ℕ
 zero    + n = n
 (suc m) + n = suc (m + n)
+-}
+
+_+_ : ℕ → ℕ → ℕ
+zero + n = n
+suc m + n = suc (m + n)
 
 2plus3 : 2 + 3 ≡ 5
 2plus3 =
@@ -101,29 +106,67 @@ n ^ (suc m) = n * (n ^ m)
 3to4 : 3 ^ 4 ≡ 81
 3to4 = refl
 
-_-_ : ℕ → ℕ → ℕ
-m       - zero    = m
-zero    - (suc n) = zero
-(suc m) - (suc n) = m - n
+_∸_ : ℕ → ℕ → ℕ
+m       ∸ zero    = m
+zero    ∸ (suc n) = zero
+(suc m) ∸ (suc n) = m ∸ n
 
 3sub2 =
   begin
-    3 - 2
+    3 ∸ 2
   ≡⟨⟩
-    2 - 1
+    2 ∸ 1
   ≡⟨⟩
-    1 - 0
+    1 ∸ 0
   ≡⟨⟩
     1
   ∎
 
 2sub3 =
   begin
-    2 - 3
+    2 ∸ 3
   ≡⟨⟩
-    1 - 2
+    1 ∸ 2
   ≡⟨⟩
-    0 - 1
+    0 ∸ 1
   ≡⟨⟩
     0
   ∎
+
+5sub3 =
+  begin
+    5 ∸ 3
+  ≡⟨⟩
+    4 ∸ 2
+  ≡⟨⟩
+    3 ∸ 1
+  ≡⟨⟩
+    2 ∸ 0
+  ∎
+
+3sub5 =
+  begin
+    3 ∸ 5
+  ≡⟨⟩
+    2 ∸ 4
+  ≡⟨⟩
+    1 ∸ 3
+  ≡⟨⟩
+    0 ∸ 2
+  ≡⟨⟩
+    0
+  ∎
+
+infixl 6 _+_ _∸_
+infixl 7 _*_
+
+{-# BUILTIN NATPLUS _+_ #-}
+{-# BUILTIN NATTIMES _*_ #-}
+{-# BUILTIN NATMINUS _∸_ #-}
+
+data Bin : Set where
+  nil : Bin
+  x0_ : Bin → Bin
+  x1_ : Bin → Bin
+
+inc : Bin → Bin
