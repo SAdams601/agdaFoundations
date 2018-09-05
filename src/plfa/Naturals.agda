@@ -144,7 +144,7 @@ zero    ∸ (suc n) = zero
     2 ∸ 0
   ∎
 
-3sub5 =
+_ =
   begin
     3 ∸ 5
   ≡⟨⟩
@@ -169,4 +169,16 @@ data Bin : Set where
   x0_ : Bin → Bin
   x1_ : Bin → Bin
 
---inc : Bin → Bin
+inc : Bin → Bin
+inc nil = x1 nil
+inc (x0 b) = x1 (inc b)
+inc (x1 b) = x1 (inc b)
+
+to : ℕ → Bin
+to zero    = x0 nil
+to (suc x) = inc (to x)
+
+{-
+_ : to 2 ≡ x1 x0 nil
+_ = {!refl!}
+-}
