@@ -101,10 +101,15 @@ open import Data.Nat using (ℕ; zero; suc; _+_; _*_; _∸_)
 +-swap m n p =
   begin
     m + (n + p)
-  ≡⟨ +-comm m (n + p) ⟩
-    (n + p) + m
-  ≡⟨ +-assoc' n p m ⟩
-    n + (p + m)
-  ≡⟨ {! sym n (p + m)!} ⟩
+  ≡⟨  sym (+-assoc m n p)  ⟩
+    (m + n) + p
+  ≡⟨ {!(+-comm m n)!} ⟩
+    (n + m) + p
+  ≡⟨ +-assoc n m p ⟩
     n + (m + p)
   ∎
+
+*-distrib-+ : ∀ (m n p : ℕ) → (m + n) * p ≡ m * p + n * p
+*-distrib-+ m n zero =
+  begin {!!}
+*-distrib-+ m n (suc p) = {!!} 
