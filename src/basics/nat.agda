@@ -8,9 +8,8 @@ data ℕ : Set where
   suc : ℕ → ℕ
 
 infixl 10 _*_
-infixl 9 _+_ _∸_
-infixl 8 _<_ _=ℕ_ _≤_ _>_ _≥_
-
+infixl 9 _+_
+infixl 8 _<_ _=ℕ_ 
 
 {-# BUILTIN NATURAL ℕ #-}
 
