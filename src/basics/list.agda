@@ -46,3 +46,17 @@ reverse-helper h (x ∷ xs) = reverse-helper (x ∷ h) xs
 
 reverse : ∀{ℓ}{A : Set ℓ} → (𝕃 A) → (𝕃 A)
 reverse l = reverse-helper [] l
+
+length-++ : ∀{ℓ}{A : Set ℓ}(l1 l2 : 𝕃 A) → length (l1 ++ l2) ≡ (length l1) + (length l2)
+length-++ [] l2 = refl
+length-++ (x ∷ l1) l2 rewrite length-++ l1 l2 = refl
+
+++-assoc : ∀ {ℓ}{A : Set ℓ} (l1 l2 l3 : 𝕃 A) → (l1 ++ l2) ++ l3 ≡ l1 ++ (l2 ++ l3)
+++-assoc [] l2 l3 = refl
+++-assoc (x ∷ l1) l2 l3 rewrite ++-assoc l1 l2 l3 = refl
+
+length-filter : ∀ {ℓ}{ A : Set ℓ} (p : A → 𝔹)(l : 𝕃 A) → length (filter p l) ≤ length l ≡ tt
+length-filter p [] = refl
+length-filter p (x ∷ l) with p x
+length-filter p (x ∷ l) | tt = length-filter p l
+length-filter p (x ∷ l) | ff = {!!}  

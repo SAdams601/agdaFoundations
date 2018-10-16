@@ -116,4 +116,12 @@ even-odd (suc x) = odd-even x
 odd-even zero = refl
 odd-even (suc x) = even-odd x
 
+_≤_ : ℕ → ℕ → 𝔹
+x ≤ y = (x < y) || x =ℕ y
 
+<-suc : ∀ (n : ℕ) → n < suc n ≡ tt
+<-suc 0 = refl
+<-suc (suc n) rewrite <-suc n = refl
+
+≤-suc : ∀ (n : ℕ) → n ≤ suc n ≡ tt
+≤-suc n rewrite <-suc n = refl
