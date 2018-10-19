@@ -61,6 +61,30 @@ length-map : ∀{ℓ ℓ'} {A : Set ℓ} {B : Set ℓ'} (f : A → B)(l : 𝕃 A
 length-map f [] = refl
 length-map f (head :: tail) rewrite length-map f tail = refl
 
+
+length-reverse-helper : ∀{ℓ}{A : Set ℓ}(h l : 𝕃 A) →
+  length (reverse-helper h l) ≡ length h + length l
+length-reverse-helper h [] rewrite +0 (length h) = refl
+length-reverse-helper h (x :: l) rewrite length-reverse-helper (x :: h) l
+                      | +suc (length h) (length l)= refl
+
+length-reverse : ∀{ℓ}{A : Set ℓ}(l : 𝕃 A) → length (reverse l) ≡ length l
+length-reverse [] = refl
+length-reverse l = length-reverse-helper [] l
+
+
+
+
+
+
+
+
+
+
+
+
+
+{-
 length-reverse-helper : ∀{ℓ}{A : Set ℓ}(h l : 𝕃 A) → 
                       length (reverse-helper h l) ≡ length h + length l
 length-reverse-helper h [] rewrite +0 (length h) = refl
@@ -68,7 +92,7 @@ length-reverse-helper h (x :: xs) rewrite length-reverse-helper (x :: h) xs = sy
 
 length-reverse : ∀{ℓ}{A : Set ℓ}(l : 𝕃 A) → length (reverse l) ≡ length l
 length-reverse l = length-reverse-helper [] l
-
+-}
 reverse-++h : ∀{ℓ}{A : Set ℓ}(l1 l2 : 𝕃 A) → reverse-helper l1 l2 ≡ reverse-helper [] l2 ++ l1
 reverse-++h l1 [] = refl
 reverse-++h l1 (x :: xs) rewrite reverse-++h (x :: l1) xs | reverse-++h (x :: []) xs | ++-assoc (reverse xs) (x :: []) l1 = refl
