@@ -212,3 +212,12 @@ drop-nothing : ∀{ℓ}{A : Set ℓ} → 𝕃 (maybe A) → 𝕃 A
 drop-nothing [] = []
 drop-nothing (nothing :: aa) = drop-nothing aa
 drop-nothing (just a :: aa) = a :: drop-nothing aa
+
+takeWhile : ∀{ℓ}{A : Set ℓ} → (A → 𝔹) → 𝕃 A → 𝕃 A
+takeWhile p [] = []
+takeWhile p (x :: l) = if (p x) then (x :: (takeWhile p l)) else []
+
+take : ∀{ℓ}{A : Set ℓ} → (n : ℕ) → 𝕃 A → 𝕃 A
+take zero x = []
+take (suc n) [] = []
+take (suc n) (x :: x₁) = x :: (take n x₁) 

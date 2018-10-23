@@ -106,3 +106,13 @@ empty++elem a (x :: l) = refl
 last-++ : ∀{ℓ}{A : Set ℓ} (a : A) (l : 𝕃 A) → last (l ++ [ a ]) (empty++elem a l) ≡ a
 last-++ a [] = refl
 last-++ a (x :: l) rewrite last-distr (l ++ [ a ]) x (empty++elem a l) | last-++ a l = refl
+
+takeWhile-repeat : ∀{ℓ}{A : Set ℓ}(n : ℕ)(a : A)(p : A → 𝔹) →
+  p a ≡ tt → takeWhile p (repeat n a) ≡ repeat n a
+takeWhile-repeat zero a pred eq = refl
+takeWhile-repeat (suc n) a pred eq rewrite eq | takeWhile-repeat n a pred eq = refl
+
+take-append-nthTail : ∀{ℓ}{A : Set ℓ}(n : ℕ)(l : 𝕃 A) → (take n l) ++ (nthTail n l) ≡ l
+take-append-nthTail zero l = refl
+take-append-nthTail (suc n) [] = refl
+take-append-nthTail (suc n) (x :: l) rewrite take-append-nthTail n l = refl
