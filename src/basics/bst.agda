@@ -20,8 +20,12 @@ data bst : A → A → Set where
   bst-node : ∀ {l l' u' u : A}(d : A) → 
                bst l' d → bst d u' → 
                l ≤A l' ≡ tt → u' ≤A u ≡ tt → 
-               bst l u
-
+               bst l u             
+-- A node of bst A l u consists of an element d a left sub tree with a minimum element of l' and a maximum element of d
+-- a right subtree that consists of a minimum element d and a maximum element u'
+-- Proofs that l <= l' and that u' <= u e.g. that the lower bound of the left subtree is
+-- greater than the lower bound of the of the entire tree
+-- and that the maximum of the right subtree is within the upper bound of the entire tree
 -- find a node which is isomorphic (_=A_) to d and return it; or else return nothing
 bst-search : ∀{l u : A}(d : A) → bst l u → maybe (Σ A (λ d' → d iso𝔹 d' ≡ tt))
 bst-search d (bst-leaf _) = nothing
@@ -31,10 +35,12 @@ bst-search d (bst-node d' L R _ _) | tt , p1 | tt , p2 = just (d' , iso𝔹-intr
 bst-search d (bst-node d' L R _ _) | tt , p1 | ff , p2 = bst-search d L
 bst-search d (bst-node d' L R _ _) | ff , p1 = bst-search d R
 
+--Decrease lower bound
 bst-dec-lb : ∀ {l l' u' : A} → bst l' u' → l ≤A l' ≡ tt → bst l u'
 bst-dec-lb (bst-leaf p) q = bst-leaf (≤A-trans q p)
 bst-dec-lb (bst-node d L R p1 p2) q = bst-node d L R (≤A-trans q p1) p2
 
+--Increase upper bound
 bst-inc-ub : ∀ {l' u' u : A} → bst l' u' → u' ≤A u ≡ tt → bst l' u
 bst-inc-ub (bst-leaf p) q = bst-leaf (≤A-trans p q)
 bst-inc-ub (bst-node d L R p1 p2) q = bst-node d L R p1 (≤A-trans p2 q)
@@ -49,3 +55,9 @@ bst-insert d (bst-node d' L R p1 p2) | ff , p with bst-insert d R
 bst-insert d (bst-node d' L R p1 p2) | ff , p | R' rewrite p = 
   bst-node d' (bst-dec-lb L p1) R' min-≤2 (max2-mono p2)
 
+
+min2 : A → A → A
+min2 = λ x y → if x ≤A y then x else y
+
+max2 : A → A → A
+max2 = λ x y → if x ≤A y then y else x 
