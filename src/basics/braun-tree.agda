@@ -32,14 +32,18 @@ bt-insert a (bt-node{n}{m} a' l r _) | inj₁ p | (a1 , a2) rewrite p
 bt-insert a (bt-node{n}{m} a' l r _) | inj₂ p | (a1 , a2)
   = bt-node a1 ((bt-insert a2 r)) l (inj₁ (sym p))
 
+
+bt-delete-min : ∀ {p : ℕ} → braun-tree (suc p) → braun-tree p
+bt-delete-min (bt-node x bt-empty bt-empty x₁) = bt-empty
+bt-delete-min (bt-node x bt-empty (bt-node _ _ _ _) (inj₁ ()))
+bt-delete-min (bt-node x bt-empty (bt-node _ _ _ _) (inj₂ ())) 
+bt-delete-min (bt-node x (bt-node{n'}{m'} a' l' r' u') bt-empty u) rewrite +0 (n' + m') = bt-node a' l' r' u'
+bt-delete-min (bt-node a (bt-node{n}{m} x l1 r1 u1) (bt-node{n'}{m'} x' l2 r2 u2) u)
+  rewrite +suc(n + m)(n' + m') | +suc n (m + (n' + m')) | +comm(n + m)(n' + m') = {!!} 
+
+
 bt-remove-min : ∀ {p : ℕ} → braun-tree (suc p) → A × braun-tree p
 bt-remove-min (bt-node a l r u) = a , bt-delete-min (bt-node a l r u)
-
-
-
-
-
-
 
 
 {-
