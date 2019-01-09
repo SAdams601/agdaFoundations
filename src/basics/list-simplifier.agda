@@ -32,12 +32,19 @@ is-emptyʳ []ʳ = tt
 is-emptyʳ _ = ff
 
 is-emptyʳ-≡ : {A : Set}(t : 𝕃ʳ A) → is-emptyʳ t ≡ tt → t ≡ []ʳ 
+is-emptyʳ-≡ (x ʳ) ()
+is-emptyʳ-≡ (t ++ʳ t₁) ()
+is-emptyʳ-≡ (mapʳ x t) ()
+is-emptyʳ-≡ (x ::ʳ t) ()
 is-emptyʳ-≡ []ʳ p = refl
+
+
+{-is-emptyʳ-≡ []ʳ p = refl
 is-emptyʳ-≡ (_ ++ʳ _) ()
 is-emptyʳ-≡ (mapʳ _ _) ()
 is-emptyʳ-≡ (_ ::ʳ _) ()
 is-emptyʳ-≡ (_ ʳ) ()
-
+-}
 𝕃ʳ-simp-step : {A : Set}(t : 𝕃ʳ A) → 𝕃ʳ A
 𝕃ʳ-simp-step ((t1a ++ʳ t1b) ++ʳ t2) = t1a ++ʳ (t1b ++ʳ t2) 
 𝕃ʳ-simp-step ((x ::ʳ t1) ++ʳ t2) = x ::ʳ (t1 ++ʳ t2) 

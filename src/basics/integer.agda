@@ -46,7 +46,11 @@ diffℤ n m | inj₁ p with <∸suc{m}{n} p               -- n < m
 diffℤ n m | inj₁ p | x , _ = mkℤ (suc x) ff
 diffℤ n m | inj₂ (inj₁ p) = mkℤ 0 triv              -- n = m 
 diffℤ n m | inj₂ (inj₂ p) with <∸suc{n}{m} p
-diffℤ n m | inj₂ (inj₂ p) | x , _ = mkℤ (suc x) tt  -- m < n 
+diffℤ n m | inj₂ (inj₂ p) | x , _ = mkℤ (suc x) tt  -- m < n
+
+~ℤ : ℤ → ℤ
+~ℤ (mkℤ zero x) = mkℤ zero x
+~ℤ (mkℤ (suc n) x) = mkℤ (suc n) (~ x)
 
 _+ℤ_ : ℤ → ℤ → ℤ
 (mkℤ 0 _) +ℤ x = x
@@ -61,6 +65,20 @@ test-+ℤ1 = refl
 test-+ℤ2 : (mkℤ 2 tt) +ℤ (mkℤ 4 ff) ≡ (mkℤ 2 ff)
 test-+ℤ2 = refl
 
+
+_-ℤ_ : ℤ → ℤ → ℤ
+a1 -ℤ a2 = a1 +ℤ (~ℤ a2)
+
+test--ℤ1 : (mkℤ 2 ff) -ℤ (mkℤ 1 ff) ≡ (mkℤ 1 ff)
+test--ℤ1 = refl
+
+
+test--ℤ2 : (mkℤ 2 ff) -ℤ (mkℤ 3 ff) ≡ (mkℤ 1 tt)
+test--ℤ2 = refl
+
+
+test--ℤ3 : (mkℤ 2 ff) -ℤ (mkℤ 1 tt) ≡ (mkℤ 3 ff)
+test--ℤ3 = refl
 _≤ℤ_ : ℤ → ℤ → 𝔹
 (mkℤ 0 triv) ≤ℤ (mkℤ 0 triv) = tt
 (mkℤ 0 triv) ≤ℤ (mkℤ (suc _) pos) = pos

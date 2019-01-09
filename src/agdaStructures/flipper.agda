@@ -31,3 +31,6 @@ suc-flip : ∀ {n} → Flipper n → Flipper n × Bool
 suc-flip (zero & val) = (_ & zero-case) , true
 suc-flip (suc space & val) = (space & suc-case val), false
 
+data _≥_ (m : ℕ) : ℕ → Set where
+m≥m : m ≥ m
+m≥p : ∀ {n} → m ≥ suc n → m ≥ n
