@@ -121,21 +121,19 @@ from (x1 x) = 1 + 2 * (from x)
   ∎
 
 
-idemLemma : ∀ (b : Bin) → from (inc b) ≡ suc (from b)
+idemLemma : ∀ (b : Bin) → suc (from b) ≡  from (inc b)
 idemLemma nil = refl
 idemLemma (x0 b) = refl
-idemLemma (x1 b) = 
-  begin
-    from (inc b) + (from (inc b) + zero)
-  ≡⟨ cong (from (inc b) +_ ) (+-identityʳ (from (inc b))) ⟩
-     from (inc b) + from (inc b)
-  ≡⟨ cong (from (inc b) +_ ) (idemLemma b) ⟩
-     from (inc b) + suc (from b)
-  ≡⟨ cong (_+ (suc (from b))) (idemLemma b) ⟩
-     suc (from b) + suc (from b)
+idemLemma (x1 b) =
+   begin
+     suc (from (x1 b))
   ≡⟨⟩
-    {!!}
-    
+    suc (1 + 2 * (from b))
+  ≡⟨⟩
+    {!2 + suc (2 * (from b))
+  ≡⟨⟩
+    ?!}
+
 
 toCompfromIdem : ∀(n : ℕ) → (from (to n)) ≡ n
 toCompfromIdem zero = refl
@@ -144,7 +142,7 @@ toCompfromIdem (suc n) =
     from (to (suc n))
   ≡⟨⟩
     from (inc (to n))
-  ≡⟨ (idemLemma (to n)) ⟩
+  ≡⟨ sym (idemLemma (to n)) ⟩
     suc (from (to n))
   ≡⟨ cong suc (toCompfromIdem n) ⟩
     suc n
