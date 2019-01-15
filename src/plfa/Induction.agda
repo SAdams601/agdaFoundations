@@ -27,3 +27,66 @@ open import Data.Nat using (ℕ; zero; suc; _+_; _*_; _∸_)
     suc m + (n + p)
   ∎
 
++-identityʳ : ∀ (m : ℕ) → m + zero ≡ m
++-identityʳ zero = refl
++-identityʳ (suc m) = 
+  begin
+    suc m + zero
+  ≡⟨⟩
+    suc (m + zero)
+  ≡⟨ cong suc (+-identityʳ m) ⟩
+    suc m
+  ∎
+
+
++-suc : ∀ (m n : ℕ) → m + suc n ≡ suc (m + n)
++-suc zero n = 
+  begin
+    zero + suc n
+  ≡⟨⟩
+    suc n
+  ≡⟨⟩
+    suc (zero + n)
+  ∎
++-suc (suc m) n = 
+  begin
+    (suc m) + (suc n)
+  ≡⟨⟩
+    suc (m + (suc n))
+  ≡⟨ cong suc (+-suc m n) ⟩
+     suc (suc (m + n))
+  ≡⟨⟩
+    suc (suc m + n)
+  ∎
+
++-comm : ∀ (m n : ℕ) → m + n ≡ n + m
++-comm m zero = 
+  begin
+    m + zero
+  ≡⟨ +-identityʳ m ⟩
+    m
+  ≡⟨⟩
+    zero + m
+  ∎
++-comm m (suc n) = 
+  begin
+    m + suc n
+  ≡⟨ +-suc m n ⟩
+    suc (m + n)
+  ≡⟨ cong suc (+-comm m n) ⟩
+    suc (n + m)
+  ≡⟨⟩
+    suc n + m
+  ∎
+
++-rearrange : ∀ (m n p q : ℕ) → (m + n) + (p + q) ≡ m + (n + p) + q
++-rearrange m n p q =
+  begin
+    (m + n) + (p + q)
+  ≡⟨ +-assoc m n (p + q) ⟩
+    m + (n + (p + q))
+  ≡⟨ cong (m +_) (sym (+-assoc n p q)) ⟩
+    m + ((n + p) + q)
+  ≡⟨ sym (+-assoc m (n + p) q) ⟩
+    m + (n + p) + q
+  ∎
