@@ -111,10 +111,66 @@ open import Data.Nat using (ℕ; zero; suc; _+_; _*_; _∸_)
 
 *-assoc : ∀(m n p : ℕ) → (m * n) * p ≡ m * (n * p)
 *-assoc zero n p = refl
-*-assoc (suc m) n p = {!
+*-assoc (suc m) n p = 
   begin
-    suc m * n * p
+    (suc m * n) * p
+  ≡⟨⟩  
+    (n + m * n) * p
+  ≡⟨ *-distrib-+ n (m * n) p ⟩
+    (n * p) + (m * n * p)
+  ≡⟨ cong ((n * p) +_) (*-assoc m n p) ⟩
+    (n * p) + (m * (n * p))
   ≡⟨⟩
-    m + m * n * p
+    suc m * (n * p)
+  ∎
+
+*-zero : ∀(n : ℕ) → n * zero ≡ zero
+*-zero zero = refl
+*-zero (suc n) = 
+  begin
+    (suc n) * zero
   ≡⟨⟩
-    ?!}
+    zero + n * zero
+  ≡⟨ cong (zero +_) (*-zero n) ⟩
+    zero + zero
+  ≡⟨⟩
+    zero
+  ∎
+
++-*-suc : ∀(m n : ℕ) → n * suc m ≡ n + n * m
++-*-suc m zero = refl
++-*-suc m (suc n) = 
+  begin
+    suc n * suc m
+  ≡⟨⟩
+    suc (m + n * suc m)
+  ≡⟨ cong suc (cong (m +_) (+-*-suc m n)) ⟩
+    suc (m + (n + n * m))
+  ≡⟨ cong suc (sym (+-assoc m n (n * m))) ⟩
+    suc ((m + n) + n * m)
+  ≡⟨ cong suc (cong (_+ n * m) (+-comm m n)) ⟩
+    suc (n + m + n * m)
+  ≡⟨⟩
+    {!suc (n + suc n * m)
+  ≡⟨⟩
+    ?!} 
+
+*-comm : ∀(m n : ℕ) → m * n ≡ n * m
+*-comm zero n = 
+  begin
+    zero * n
+  ≡⟨⟩
+    zero
+  ≡⟨ sym (*-zero n) ⟩
+    n * zero
+  ∎
+*-comm (suc m) n = 
+  begin
+    suc m * n
+  ≡⟨⟩
+    n + m * n
+  ≡⟨ cong (n +_) (*-comm m n) ⟩
+    n + n * m
+  ≡⟨ sym (+-*-suc m n) ⟩
+    n * suc m
+  ∎ 
