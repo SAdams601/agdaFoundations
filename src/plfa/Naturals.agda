@@ -60,6 +60,19 @@ _ =
     0
   ∎
 
+
++-identityʳ : ∀ (m : ℕ) → m + zero ≡ m
++-identityʳ zero = refl
++-identityʳ (suc m) = 
+  begin
+    suc m + zero
+  ≡⟨⟩
+    suc (m + zero)
+  ≡⟨ cong suc (+-identityʳ m) ⟩
+    suc m
+  ∎
+
+
 infixl 6 _+_ _∸_
 infixl 7 _*_
 
@@ -82,24 +95,6 @@ inc nil = x1 nil
 inc (x1 x) = x0 (inc x)
 inc (x0 x) = x1 x
 
-_ : inc (x0 nil) ≡ x1 nil
-_ = refl
-
-_ : inc (x1 nil) ≡ x0 x1 nil
-_ = refl
-
-_ : inc (x0 x1 nil) ≡ x1 x1 nil
-_ = refl
-
-_ : inc (x1 x1 nil) ≡ x0 x0 x1 nil
-_ = refl
-
-_ : inc (x0 x0 x1 nil) ≡ x1 x0 x1 nil
-_ = refl
-
-_ : inc (x1 x1 x0 x1 nil) ≡ x0 x0 x1 x1 nil
-_ = refl
-
 to : ℕ → Bin
 to zero = x0 nil
 to (suc x) = inc (to x)
@@ -109,31 +104,38 @@ from nil = 0
 from (x0 x) = 2 * (from x)
 from (x1 x) = 1 + 2 * (from x)
 
-+-identityʳ : ∀ (m : ℕ) → m + zero ≡ m
-+-identityʳ zero = refl
-+-identityʳ (suc m) = 
+times1 : ∀(n : ℕ) → n * 1 ≡ n
+times1 zero = refl
+times1 (suc n) rewrite times1 n = refl
+
+distribMulOverSuc : ∀ (m n : ℕ) → m * suc n ≡ m + m * n
+distribMulOverSuc zero n = refl
+distribMulOverSuc (suc m) zero = 
   begin
-    suc m + zero
-  ≡⟨⟩
-    suc (m + zero)
-  ≡⟨ cong suc (+-identityʳ m) ⟩
+    suc m * (suc zero)
+  ≡⟨ times1 (suc m) ⟩
     suc m
-  ∎
-
-
-idemLemma : ∀ (b : Bin) → suc (from b) ≡  from (inc b)
-idemLemma nil = refl
-idemLemma (x0 b) = refl
-idemLemma (x1 b) =
-   begin
-     suc (from (x1 b))
-  ≡⟨⟩
-    suc (1 + 2 * (from b))
-  ≡⟨⟩
-    {!2 + suc (2 * (from b))
+  ≡⟨ sym (zero +_) ⟩
+    {!suc m + zero
   ≡⟨⟩
     ?!}
+distribMulOverSuc (suc m) (suc n) = {!!} 
 
+incExtractFrom : ∀ (b : Bin) → from (inc b) ≡ suc (from b)
+incExtractFrom nil = refl
+incExtractFrom (x0 b) = refl
+incExtractFrom (x1 b) = 
+  begin
+    from (inc (x1 b))
+  ≡⟨⟩
+    from (x0 (inc b))
+  ≡⟨⟩
+    2 * (from (inc b))
+  ≡⟨ cong (2 *_) (incExtractFrom b) ⟩
+     2 * suc (from b)
+  ≡⟨⟩
+    {!!}
+    
 
 toCompfromIdem : ∀(n : ℕ) → (from (to n)) ≡ n
 toCompfromIdem zero = refl
@@ -142,9 +144,9 @@ toCompfromIdem (suc n) =
     from (to (suc n))
   ≡⟨⟩
     from (inc (to n))
-  ≡⟨ sym (idemLemma (to n)) ⟩
+  ≡⟨ incExtractFrom (to n) ⟩
     suc (from (to n))
   ≡⟨ cong suc (toCompfromIdem n) ⟩
-    suc n
+     suc n
   ∎
-   
+
