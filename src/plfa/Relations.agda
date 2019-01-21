@@ -8,6 +8,8 @@ open import Data.List using (List; []; _∷_)
 open import Function using (id; _∘_)
 open import Relation.Nullary using (¬_)
 open import Data.Empty using (⊥; ⊥-elim)
+open Eq.≡-Reasoning using (begin_; _≡⟨⟩_; _≡⟨_⟩_; _∎)
+
 
 data _≤_ : ℕ → ℕ → Set where
 
@@ -140,5 +142,96 @@ data _<_ : ℕ → ℕ → Set where
   → n < p
   --------
   → m < p
-<-trans z<s n<p  = {!!}
+<-trans z<s (s<s _)  = z<s
 <-trans (s<s m<n) (s<s n<p) = s<s (<-trans m<n n<p)   
+
+{-
+ trochotomy
+ m < n or
+ m ≡ n or
+ m > n
+-}
+
+data Trichotomy (m n : ℕ) : Set where
+  equals :
+    m ≡ n
+    -------
+    → Trichotomy m n
+
+  m<n :
+    m < n
+    -----------------
+    → Trichotomy m n
+
+  n<m :
+    n < m
+    -----------------
+    → Trichotomy m n
+
+<-trichotomy : ∀ (m n : ℕ) → Trichotomy m n
+<-trichotomy zero zero = equals refl
+<-trichotomy zero (suc n) = m<n z<s
+<-trichotomy (suc m) zero = n<m z<s
+<-trichotomy (suc m) (suc n) with <-trichotomy m n
+...     | equals p = equals (cong suc p)
+...     | m<n    p = m<n (s<s p)
+...     | n<m    p = n<m (s<s p)
+
+
++-monoʳ-< : ∀ (m p q : ℕ)
+            → p < q
+            ----------------
+            → m + p < m + q
++-monoʳ-< zero p q pltq = pltq
++-monoʳ-< (suc m) p q pltq = s<s (+-monoʳ-< m p q pltq)
+
++-monoˡ-< : ∀ (m n p : ℕ)
+            → m < n
+            ----------------
+            → m + p < n + p
++-monoˡ-< m n p mltn rewrite +-comm m p | +-comm n p = +-monoʳ-< p m n mltn
+
++-mono-< : ∀ (m n p q : ℕ)
+           → m < n
+           → p < q
+           --------
+           → m + p < n + q
++-mono-< m n p q mltn pltq = <-trans (+-monoˡ-< m n p mltn) (+-monoʳ-< n p q pltq)
+
+≤-iff-< : ∀ (m n : ℕ) → suc m ≤ n → m < n
+≤-iff-< zero n (s≤s prf) = z<s
+≤-iff-< (suc m) (suc n) (s≤s prf) = s<s (≤-iff-< m n prf)
+
+<-iff-≤ : ∀ (m n : ℕ) → m < n → suc m ≤ n
+<-iff-≤ zero zero ()
+<-iff-≤ (suc m) zero ()
+<-iff-≤ zero (suc n) prf = s≤s z≤n
+<-iff-≤ (suc m) (suc n) (s<s prf) with <-iff-≤ m n prf
+...            | s≤s prf2 = s≤s (s≤s prf2)
+
+
+-- Want to prove transitivity through the relationship between strict inequality and inequality
+--≤-trans : ∀ {m n p : ℕ}  → m ≤ n → n ≤ p → m ≤ p
+
+<-iff-≤' : ∀ (m n : ℕ) → m < n → m ≤ n
+<-iff-≤' zero zero ()
+<-iff-≤' zero (suc n) z<s = z≤n
+<-iff-≤' (suc m) zero ()
+<-iff-≤' (suc m) (suc n) prf = s≤s (<-iff-≤' m n {!prf!})
+
+<-trans-revisited : ∀ (m n p : ℕ)
+  → m < n
+  → n < p
+  --------
+  → m < p
+<-trans-revisited zero n p z<s (s<s _) = ≤-iff-< zero p (s≤s z≤n)
+<-trans-revisited (suc m) zero p () nltp
+<-trans-revisited (suc m) (suc n) zero _ ()
+<-trans-revisited (suc m) (suc n) (suc p) mltn (s<s nltp) =
+
+  -- trans : suc (suc m) ≤ suc p
+    -- 1st - 
+  let
+    mltn' = (<-iff-≤ (suc m) (suc n) mltn)
+  in
+  ≤-iff-< (suc m) (suc p) (≤-trans mltn' (<-iff-≤' (suc n) (suc p) (s<s nltp)))
