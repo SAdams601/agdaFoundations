@@ -258,3 +258,40 @@ from-to-id (suc n) =
   ≡⟨ cong suc (from-to-id n) ⟩
     suc n
   ∎
+
+
+--is can x1 x1 x0 x1 nil
+--not ca x1 x1 x0 x1 x0 x0 nil
+
+data One : Bin → Set
+data Can : Bin → Set
+
+
+data Can where
+
+  nil :
+    Can nil
+
+  x0 :
+    Can (x0 nil)
+
+  can : ∀ {b : Bin}
+    → One b
+    -----------------
+    → Can b
+
+data One where
+
+  one :    
+     One (x1 nil)
+
+  canOne : ∀ {b : Bin}
+    → can b
+    --------
+    → One b
+
+
+incCan : ∀ {b : Bin} → Can b → Can (inc b)
+incCan nil = can one
+incCan x0 = can one
+incCan {b} (can b') = can {!!}

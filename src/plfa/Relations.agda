@@ -217,7 +217,7 @@ data Trichotomy (m n : ℕ) : Set where
 <-iff-≤' zero zero ()
 <-iff-≤' zero (suc n) z<s = z≤n
 <-iff-≤' (suc m) zero ()
-<-iff-≤' (suc m) (suc n) prf = s≤s (<-iff-≤' m n {!prf!})
+<-iff-≤' (suc m) (suc n) (s<s prf) = s≤s (<-iff-≤' m n prf)
 
 <-trans-revisited : ∀ (m n p : ℕ)
   → m < n
@@ -228,10 +228,64 @@ data Trichotomy (m n : ℕ) : Set where
 <-trans-revisited (suc m) zero p () nltp
 <-trans-revisited (suc m) (suc n) zero _ ()
 <-trans-revisited (suc m) (suc n) (suc p) mltn (s<s nltp) =
-
-  -- trans : suc (suc m) ≤ suc p
-    -- 1st - 
   let
     mltn' = (<-iff-≤ (suc m) (suc n) mltn)
   in
   ≤-iff-< (suc m) (suc p) (≤-trans mltn' (<-iff-≤' (suc n) (suc p) (s<s nltp)))
+
+data even : ℕ → Set
+data odd  : ℕ → Set
+
+data even where
+
+  zero :
+  ----------
+    even zero
+
+  suc : ∀ {n : ℕ}
+    → odd n
+      -----------
+    → even (suc n)
+
+data odd where
+
+  suc : ∀ {n : ℕ}
+    → even n
+    --------------
+    → odd (suc n)
+
+e+e≡e : ∀ {m n : ℕ}
+  → even m
+  → even n
+  ---------------
+  → even (m + n)
+
+o+e≡o : ∀ {m n : ℕ}
+  → odd m
+  → even n
+  ----------------
+  → odd (m + n)
+
+e+e≡e zero n = n
+e+e≡e (suc x) n = suc (o+e≡o x n)
+
+o+e≡o (suc x) n = suc (e+e≡e x n)
+
+e+o≡o : ∀ {m n : ℕ}
+  → even m
+  → odd n
+  -------------
+  → odd (m + n)
+
+
+o+o≡e : ∀ {m n : ℕ}
+  → odd m
+  → odd n
+  --------------
+  → even (m + n)
+
+e+o≡o zero n = n
+e+o≡o (suc m) n = suc (o+o≡e m n)
+
+o+o≡e (suc m) n = suc (e+o≡o m n)
+
