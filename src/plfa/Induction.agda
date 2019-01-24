@@ -269,29 +269,35 @@ data Can : Bin → Set
 
 data Can where
 
-  nil :
-    Can nil
-
-  x0 :
-    Can (x0 nil)
-
-  can : ∀ {b : Bin}
-    → One b
-    -----------------
-    → Can b
+  zero : Can (x0 nil)
+  can : ∀ {b : Bin} → One b → Can b
 
 data One where
 
-  one :    
-     One (x1 nil)
+  one :
+    One (x1 nil) 
 
-  canOne : ∀ {b : Bin}
-    → can b
-    --------
-    → One b
-
+  rex0 : ∀ {b : Bin} → One b → One (x0 b)
+  rex1 : ∀ {b : Bin} → One b → One (x1 b)
+  
 
 incCan : ∀ {b : Bin} → Can b → Can (inc b)
-incCan nil = can one
-incCan x0 = can one
-incCan {b} (can b') = can {!!}
+incOne : ∀ {b : Bin} → One b → One (inc b)
+
+incOne one = rex0 one
+incOne {x0 x} (rex0 b) = incOne {!!}
+incOne {x1 x} (rex1 b) = incOne {!!}
+
+incCan zero = can one
+incCan {b} (can x) = can (incOne x)
+
+
+toCan : ∀ (n : ℕ) → Can (to n)
+toCan zero = zero
+toCan (suc n) = incCan (toCan n)
+
+toFromCan : ∀ {b : Bin} → Can b → to (from  b) ≡ b
+toFromCan zero = refl
+toFromCan {.(x1 nil)} (can one) = refl
+toFromCan {.(x0 _)} (can (rex0 x)) = {!!}
+toFromCan {.(x1 _)} (can (rex1 x)) = {!!}
