@@ -73,6 +73,60 @@ data Total (m n : ℕ) : Set where
 ...                     | flipped n≤m = flipped (s≤s n≤m)
 
 
+module ≤-Reasoning where
+
+  infix  1 begin≤_
+  infixr 2 _≤⟨⟩_ _≤⟨_⟩_ _≤≡⟨_⟩_
+  infix  3 _∎≤ 
+
+  begin≤_ : ∀ {x y : ℕ}
+    → x ≤ y
+    ---------
+    → x ≤ y
+  begin≤ x≤y = x≤y
+
+  _≤⟨⟩_ : ∀ (x : ℕ) {y : ℕ}
+    → x ≤ y
+    ---------
+    → x ≤ y
+  x ≤⟨⟩ x≤y = x≤y
+
+  _≤⟨_⟩_ : ∀ (x : ℕ) {y z : ℕ}
+    → x ≤ y
+    → y ≤ z
+    ------------
+    → x ≤ z
+  x ≤⟨ y≤z ⟩ x≤z = ≤-trans y≤z x≤z
+
+  _∎≤ : ∀ (x : ℕ)
+    -----------
+      → x ≤ x
+  x ∎≤ = ≤-refl
+
+  suc-≡ : ∀ {x y : ℕ} →
+    suc x ≡ suc y
+    -----------------
+    → x ≡ y
+  suc-≡ refl = refl
+  
+  ≡-≤ : ∀ {x y : ℕ}
+    → x ≡ y
+    ---------
+    → y ≤ x
+  ≡-≤ {x} {zero} e = z≤n
+  ≡-≤ {zero} {suc y} ()
+  ≡-≤ {suc x} {suc y} e = s≤s (≡-≤ (suc-≡ e))
+
+  _≤≡⟨_⟩_ : ∀ (x : ℕ) {y z : ℕ}    
+    → x ≡ y
+    → y ≤ z
+    -----------
+    → x ≤ z
+  x ≤≡⟨ x≡y ⟩ y≤z = ≤-trans (≡-≤ (sym x≡y)) y≤z  
+  
+open ≤-Reasoning
+
+
 
 +-monoʳ-≤ : ∀ (m p q : ℕ)
   → p ≤ q
@@ -85,15 +139,30 @@ data Total (m n : ℕ) : Set where
   → m ≤ n
   ----------------
   → m + p ≤ n + p
-+-monoˡ-≤ m n p m≤n rewrite +-comm m p | +-comm n p = +-monoʳ-≤ p m n m≤n
-
++-monoˡ-≤ m n p m≤n =
+  begin≤
+    m + p
+  ≤≡⟨ +-comm m p ⟩
+    p + m
+  ≤⟨ +-monoʳ-≤ p m n m≤n ⟩
+    p + n
+  ≤≡⟨ +-comm p n ⟩
+    n + p
+  ∎≤
+    
 +-mono-≤ : ∀ (m n p q : ℕ)
   → m ≤ n
   → p ≤ q
   ----------------
   → m + p ≤ n + q
-+-mono-≤ m n p q m≤n p≤q = ≤-trans (+-monoˡ-≤ m n p m≤n) (+-monoʳ-≤ n p q p≤q)
-
++-mono-≤ m n p q m≤n p≤q =
+  begin≤
+    m + p
+  ≤⟨ +-monoˡ-≤ m n p m≤n ⟩
+    n + p
+  ≤⟨ +-monoʳ-≤ n p q p≤q ⟩
+    n + q
+  ∎≤
 
 *-monoʳ-≤ : forall (m p q : ℕ)
   → p ≤ q
