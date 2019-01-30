@@ -245,3 +245,14 @@ open _⇔_
     }
 
 
+⇔-trans : ∀ {A B C : Set}
+  → A ⇔ B
+  → B ⇔ C
+  ---------
+  → A ⇔ C
+⇔-trans A⇔B B⇔C =
+  record
+    { to   = (to B⇔C) ∘ (to A⇔B)
+    ; from = (from A⇔B) ∘ (from B⇔C)
+    }
+

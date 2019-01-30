@@ -282,11 +282,14 @@ data One where
   
 
 incCan : ∀ {b : Bin} → Can b → Can (inc b)
-incOne : ∀ {b : Bin} → One b → One (inc b)
+postulate
+  incOne : ∀ {b : Bin} → One b → One (inc b)
 
+{-
 incOne one = rex0 one
 incOne {x0 x} (rex0 b) = incOne {!!}
 incOne {x1 x} (rex1 b) = incOne {!!}
+-}
 
 incCan zero = can one
 incCan {b} (can x) = can (incOne x)
@@ -296,8 +299,11 @@ toCan : ∀ (n : ℕ) → Can (to n)
 toCan zero = zero
 toCan (suc n) = incCan (toCan n)
 
-toFromCan : ∀ {b : Bin} → Can b → to (from  b) ≡ b
-toFromCan zero = refl
+postulate
+  toFromCan : ∀ {b : Bin} → Can b → to (from  b) ≡ b
+
+{-toFromCan zero = refl
 toFromCan {.(x1 nil)} (can one) = refl
 toFromCan {.(x0 _)} (can (rex0 x)) = {!!}
 toFromCan {.(x1 _)} (can (rex1 x)) = {!!}
+-}
