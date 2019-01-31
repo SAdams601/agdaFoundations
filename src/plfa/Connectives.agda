@@ -33,3 +33,17 @@ record _×′_ (A B : Set) : Set where
     proj₁′ : A
     proj₂′ : B
 open _×′_
+
+η-× : ∀ {A B : Set} (w : A × B) → ⟨ proj₁ w , proj₂ w ⟩ ≡ w
+η-× ⟨ x , y ⟩ = refl
+
+infixr 2 _×_ 
+
+×-comm : ∀ {A B : Set} → A × B ≃ B × A
+×-comm =
+  record
+    { to      = λ { ⟨ x , y ⟩ → ⟨ y , x ⟩ }
+    ; from    = λ { ⟨ y , x ⟩ → ⟨ x , y ⟩ }
+    ; from∘to = λ { ⟨ x , y ⟩ → refl }
+    ; to∘from = λ { ⟨ y , x ⟩ → refl }
+    }
