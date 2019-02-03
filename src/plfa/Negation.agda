@@ -61,12 +61,11 @@ id≡id′ = extensionality λ ()
 assimilation : ∀ {A : Set} (¬x ¬x′ : ¬ A) → ¬x ≡ ¬x′
 assimilation ¬x ¬x′ = extensionality λ x → ⊥-elim (¬x x)
 
-open import plfa.Relations using (_<_)
+open import plfa.Relations using (_<_;s<s)
 
 <-irreflexive : ∀ {n : ℕ}
-  → n < n
-    ------
-  → ⊥
-<-irreflexive ()
+  → ¬ (n < n)
+<-irreflexive {zero} ()
+<-irreflexive {suc n} (s<s n<n) = {!<-irreflexive n<n!}
 
 
