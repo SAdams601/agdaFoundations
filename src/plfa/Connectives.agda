@@ -149,16 +149,29 @@ case-cancels (inj₂ x) = refl
     ; to∘from = λ B⊎A → case-cancels B⊎A
     }
 
-
 ⊎-assoc : ∀ {A B C : Set} → (A ⊎ B) ⊎ C ≃ A ⊎ (B ⊎ C)
 ⊎-assoc =
   record
-    { to      = λ A⊎B-C → case-⊎ (case-⊎ inj₁ (inj₂ ∘ inj₁)) (inj₂ ∘ inj₂) A⊎B-C
-    ; from    = λ A-B⊎C → case-⊎ (inj₁ ∘ inj₁) (case-⊎ (inj₁ ∘ inj₂) inj₂) A-B⊎C
-    ; from∘to = λ A⊎B-C → 
-                        begin
-                          {!case-⊎ (case-⊎ inj₁ (inj₂ ∘ inj₁)) (inj₂ ∘ inj₂) A⊎B-C
-                        ≡⟨⟩
-                          ?!}
-    ; to∘from = {!!}
+    { to      = toFull
+    ; from    = fromFull
+    ; from∘to = λ{ (inj₁ (inj₁ A)) → refl ;
+                   (inj₁ (inj₂ B)) → refl ;
+                   (inj₂ C) → refl }                          
+    ; to∘from = λ { (inj₁ A) → refl ;
+                    (inj₂ (inj₁ B)) → refl ;
+                    (inj₂ (inj₂ C)) → refl}
     }
+    where
+      A-to-case = inj₁
+      B-to-case = inj₂ ∘ inj₁
+      C-to-case   = inj₂ ∘ inj₂
+      A⊎B-to-case = case-⊎ A-to-case B-to-case
+      toFull = case-⊎ A⊎B-to-case C-to-case
+      A-from-case = inj₁ ∘ inj₁
+      B-from-case = inj₁ ∘ inj₂
+      C-from-case = inj₂
+      B⊎C-from-case = case-⊎ B-from-case C-from-case
+      fromFull = case-⊎ A-from-case B⊎C-from-case
+
+data ⊥ : Set where
+
