@@ -175,3 +175,109 @@ case-cancels (inj₂ x) = refl
 
 data ⊥ : Set where
 
+⊥-elim : ∀ {A : Set}
+  → ⊥
+    ---
+  → A
+⊥-elim ()
+
+uniq-⊥ : ∀ {C : Set} (h : ⊥ → C) (w : ⊥) → ⊥-elim w ≡ h w
+uniq-⊥ h ()
+
+⊥-identityˡ : ∀ {A : Set} → ⊥ ⊎ A ≃ A
+⊥-identityˡ = 
+  record
+    { to      = λ{ (inj₁ ()); (inj₂ a) → a}
+    ; from    = inj₂
+    ; from∘to = λ{ (inj₁ ()); (inj₂ x) → refl }
+    ; to∘from = λ { a → refl}
+    }
+
+⊥-identityʳ : ∀ {A : Set} → A ⊎ ⊥ ≃ A
+⊥-identityʳ {A} = 
+  ≃-begin  
+    (A ⊎ ⊥)
+  ≃⟨ ⊎-comm ⟩
+    (⊥ ⊎ A)
+  ≃⟨ ⊥-identityˡ ⟩
+    A
+  ≃-∎ 
+
+→-elim : ∀ {A B : Set}
+  → (A → B)
+  → A
+    --------
+  → B
+→-elim L M = L M
+
+
+η-→ : ∀ {A B : Set} (f : A → B) → (λ (x : A) → f x) ≡ f
+η-→ f = refl
+
+currying : ∀ {A B C : Set} → (A → B → C) ≃ (A × B → C)
+currying =
+  record
+    { to      = λ{ f → λ{ ⟨ x , y ⟩ → f x y }}
+    ; from    = λ{ g → λ{ x → λ{ y → g ⟨ x , y ⟩ }}}
+    ; from∘to = λ f → refl
+    ; to∘from = λ g → extensionality (λ{⟨ x , y ⟩ → refl})
+    }
+
+→-distrib-⊎ : ∀ {A B C : Set} → (A ⊎ B → C) ≃ ((A → C) × (B → C))
+→-distrib-⊎ =
+  record
+    { to      = λ{ f → ⟨ f ∘ inj₁ , f ∘ inj₂ ⟩}
+    ; from    = λ{ ⟨ g , h ⟩ → λ{ (inj₁ x) →  g x ; (inj₂ x) → h x}}
+    ; from∘to = λ f → extensionality (λ{ (inj₁ x) → refl ; (inj₂ x) → refl})
+    ; to∘from = λ{ ⟨ g , h ⟩ → refl}
+    } 
+
+→-distrib-× : ∀ {A B C : Set} → (A → B × C) ≃ (A → B) × (A → C)
+→-distrib-× =
+  record
+    { to      = λ{ f → ⟨ proj₁ ∘ f , proj₂ ∘ f ⟩}
+    ; from    = λ{ ⟨ g , h ⟩ → λ{ x → ⟨ g x , h x ⟩}}
+    ; from∘to = λ f → extensionality λ{ x → η-× (f x)}
+    ; to∘from = λ{ ⟨ g , h ⟩ → refl}
+    }
+
+×-distrib-⊎ : ∀ {A B C : Set} → (A ⊎ B) × C ≃ (A × C) ⊎ (B × C)
+×-distrib-⊎ =
+  record
+    { to      = λ{ ⟨ inj₁ x , z ⟩ → inj₁ ⟨ x , z ⟩ ; ⟨ inj₂ x , z ⟩ → inj₂ ⟨ x , z ⟩}
+    ; from    = λ{ (inj₁ ⟨ x , z ⟩) → ⟨ inj₁ x , z ⟩ ; (inj₂ ⟨ y , z ⟩) → ⟨ inj₂ y , z ⟩}
+    ; from∘to = λ{ ⟨ inj₁ x , z ⟩ → refl ; ⟨ inj₂ x , z ⟩ → refl}
+    ; to∘from = λ{ (inj₁ ⟨ x , z ⟩) → refl ; (inj₂ ⟨ y , z ⟩ ) → refl}
+    }
+
+⊎-distrib-× : ∀ {A B C : Set} → (A × B) ⊎ C ≲ (A ⊎ C) × (B ⊎ C)
+⊎-distrib-× =
+  record
+    { to      = λ{ (inj₁ ⟨ x , y ⟩) → ⟨ inj₁ x , inj₁ y ⟩ ;
+                   (inj₂ x) → ⟨ inj₂ x , inj₂ x ⟩}
+    ; from    = λ{ ⟨ inj₁ x , inj₁ y ⟩ → inj₁ ⟨ x , y ⟩ ;
+                   ⟨ inj₁ x , inj₂ z ⟩ → inj₂ z ;
+                   ⟨ inj₂ z , _      ⟩ → inj₂ z }
+    ; from∘to = λ{ (inj₁ (⟨ x , y ⟩)) → refl ;
+                   (inj₂ x) → refl}
+    }
+
+
+⊎-weak-× : ∀ {A B C : Set} → (A ⊎ B) × C → A ⊎ (B × C)
+⊎-weak-× ⟨ inj₁ a , C ⟩ = inj₁ a
+⊎-weak-× ⟨ inj₂ b , C ⟩ = inj₂ ⟨ b , C ⟩
+
+⊎×-implies-×⊎ : ∀ {A B C D : Set} → (A × B) ⊎ (C × D) → (A ⊎ C) × (B ⊎ D)
+⊎×-implies-×⊎ (inj₁ ⟨ a , b ⟩) = ⟨ inj₁ a , inj₁ b ⟩
+⊎×-implies-×⊎ (inj₂ ⟨ c , d ⟩) = ⟨ inj₂ c , inj₂ d ⟩
+
+{-
+×⊎-implies-⊎× : ∀ {A B C D : Set} → (A ⊎ C) × (B ⊎ D) → (A × B) ⊎ (C × D)
+×⊎-implies-⊎× ⟨ inj₁ a , inj₁ b ⟩ = inj₁ ⟨ a , b ⟩
+×⊎-implies-⊎× ⟨ inj₁ a , inj₂ d ⟩ = {!!}
+×⊎-implies-⊎× ⟨ inj₂ c , inj₁ b ⟩ = {!!}
+×⊎-implies-⊎× ⟨ inj₂ c , inj₂ d ⟩ = inj₂ ⟨ c , d ⟩
+There is not solution to this because we need either an A and a B
+or a C and a D but the middle two cases we don't have both of the types to make one
+of the required pairs. Instead we have one type from each of the pairs
+-}
