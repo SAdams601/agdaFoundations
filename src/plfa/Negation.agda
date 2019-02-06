@@ -3,8 +3,8 @@ module plfa.Negation where
 open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; cong-app)
 open import Data.Nat using (ℕ; zero; suc)
 open import Data.Empty using (⊥; ⊥-elim)
-open import Data.Sum using (_⊎_; inj₁; inj₂)
-open import Data.Product using (_×_; proj₁; proj₂) renaming (_,_ to ⟨_,_⟩)
+open import plfa.Connectives using (_⊎_; inj₁; inj₂)
+open import Data.Product using (_×_; proj₁; proj₂; curry′) renaming (_,_ to ⟨_,_⟩)
 open import Function using (_∘_)
 open import plfa.Isomorphism using (_≃_; ≃-sym; ≃-trans; _≲_; extensionality)
 
@@ -119,12 +119,50 @@ suc-≢ {suc m} {suc n} m≢n suc-m≡n = contraposition (λ x → suc-injective
 ...         | m<n    mLTn m≢n n≮m = m<n (s<s mLTn) (suc-≢ m≢n) (suc-cong-< n≮m)
 ...         | n<m    nLTm m≢n m≮n = n<m (s<s nLTm) (suc-≢ m≢n) (suc-cong-< m≮n)  
 
+open plfa.Isomorphism.≃-Reasoning
+open import plfa.Connectives using (→-distrib-⊎)
 
 ⊎-dual-× : ∀ {A B : Set} → ¬ (A ⊎ B) ≃ (¬ A) × (¬ B)
-⊎-dual-× =
-  record
-    { to      = ?
-    ; from    = ?
-    ; from∘to = ?
-    ; to∘from = ?
+⊎-dual-× {A}{B} = record
+    { to      = λ{ x → ⟨ x ∘ inj₁ , x ∘ inj₂ ⟩ }
+    ; from    = λ{ ⟨ g , h ⟩ → λ{ (inj₁ x) → g x ; (inj₂ y) → h y } }
+    ; from∘to = λ{ f → extensionality λ{ (inj₁ x) → refl ; (inj₂ y) → refl }}
+    ; to∘from = λ{ ⟨ fst , snd ⟩ → refl}
     }
+
+×-dual-⊎ : ∀ {A B : Set} → ¬ (A × B) ≲ (¬ A) ⊎ (¬ B)
+×-dual-⊎ =
+  record
+    { to      = λ ¬x → {!¬x!}
+    ; from    = λ{ (inj₁ x) a×b → ¬-elim x (proj₁ a×b) ; (inj₂ y) a×b → ¬-elim y (proj₂ a×b)}
+    ; from∘to = λ x → {!!}
+    }
+
+{-
+The issue is that I can't access A , B inside of the ¬ (A × B) 
+-}
+
+postulate
+  em : ∀ {A : Set} → A ⊎ ¬ A
+  ¬¬-elim : ∀ {A : Set} → ¬ ¬ A → A
+  peirce : ∀ {A B : Set} → ((A → B) → A) → A
+  →-disjunc : ∀ {A B : Set} → (A → B) → ¬ A ⊎ B
+  deMorgan : ∀ {A B : Set} → ¬ (¬ A × ¬ B) → A ⊎ B
+
+
+em-irrefutable : ∀ {A : Set} → ¬ ¬ (A ⊎ ¬ A)
+em-irrefutable k = k (inj₂ (λ x → k (inj₁ x)))
+
+
+
+
+
+Stable : Set → Set
+Stable A = ¬ ¬ A → A
+
+neg-stable : ∀ {A : Set} → Stable (¬ A)
+neg-stable k = ¬¬¬-elim k
+
+conj-stable : ∀ {A B : Set} → Stable A → Stable B → Stable (A × B)
+conj-stable aS bS = λ ¬¬x → ⟨ (aS (λ ¬x → ¬¬x (λ a×b → ¬x (proj₁ a×b)))) ,
+                              bS (λ ¬b → ¬¬x (λ a×b → ¬b (proj₂ a×b))) ⟩
