@@ -133,7 +133,7 @@ open import plfa.Connectives using (→-distrib-⊎)
 ×-dual-⊎ : ∀ {A B : Set} → ¬ (A × B) ≲ (¬ A) ⊎ (¬ B)
 ×-dual-⊎ =
   record
-    { to      = λ ¬x → {!¬x!}
+    { to      = λ ¬x → {!!}
     ; from    = λ{ (inj₁ x) a×b → ¬-elim x (proj₁ a×b) ; (inj₂ y) a×b → ¬-elim y (proj₂ a×b)}
     ; from∘to = λ x → {!!}
     }
@@ -148,7 +148,6 @@ postulate
   peirce : ∀ {A B : Set} → ((A → B) → A) → A
   →-disjunc : ∀ {A B : Set} → (A → B) → ¬ A ⊎ B
   deMorgan : ∀ {A B : Set} → ¬ (¬ A × ¬ B) → A ⊎ B
-
 
 em-irrefutable : ∀ {A : Set} → ¬ ¬ (A ⊎ ¬ A)
 em-irrefutable k = k (inj₂ (λ x → k (inj₁ x)))
