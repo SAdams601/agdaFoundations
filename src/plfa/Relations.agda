@@ -123,7 +123,7 @@ module ≤-Reasoning where
     -----------
     → x ≤ z
   x ≤≡⟨ x≡y ⟩ y≤z = ≤-trans (≡-≤ (sym x≡y)) y≤z  
-  
+
 open ≤-Reasoning
 
 
