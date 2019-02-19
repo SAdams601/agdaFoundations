@@ -163,7 +163,7 @@ x≤sucx {suc x} = s≤s x≤sucx
 lemma₂ : ∀ {x y : ℕ} → x ≤ y → x ≤ suc y
 lemma₂ {zero} p = z≤n
 lemma₂ {suc x} {zero} () 
-lemma₂ {suc x} {suc y} (s≤s p) = s≤s (lemma₂ {!p!})
+lemma₂ {suc x} {suc y} (s≤s p) = s≤s (lemma₂ p)
 
 ≤-rhsSuc : ∀ {x y : ℕ} → y ≤ x + suc y
 ≤-rhsSuc {zero} = x≤sucx
@@ -184,3 +184,34 @@ y≤sucx {suc x} {suc y} (s≤s p) = s≤s (y≤sucx p)
 ∃-+-≤ : ∀{x y z : ℕ} → ∃[ x ]( x + y ≡ z) → y ≤ z
 ∃-+-≤ {y} ⟨ zero , refl ⟩ = x≤x
 ∃-+-≤ {y} ⟨ suc x , refl ⟩ = y≤sucx y≤y+
+
+--"There does not exist an x such that B x"
+-- is isomorphic to
+-- "for all x's there does not exist a B x"
+¬∃≃∀¬ : ∀ {A : Set} {B : A → Set}
+  → (¬ ∃[ x ] B x) ≃ ∀ x → ¬ B x
+¬∃≃∀¬ =
+  record
+  { to      = λ{ ¬∃xy x y → ¬∃xy ⟨ x , y ⟩}
+  ; from    = λ{ ∀¬xy ⟨ x , y ⟩ → ∀¬xy x y }
+  ; from∘to = λ{ ¬∃xy → extensionality (λ{ ⟨ x , y ⟩ → refl})}
+  ; to∘from = λ{ y → refl}
+  }
+
+∃¬-implies-¬∀ : ∀ {A : Set} {B : A → Set}
+  → ∃[ x ] (¬ B x)
+    ----------------
+  → ¬ (∀ x → B x)
+∃¬-implies-¬∀ ⟨ x , y ⟩ = λ z → y (z x)             
+
+
+{-
+¬∀-implies-∃¬ : ∀ {A : Set} {B : A → Set}
+  → ¬ (∀ x → B x)
+    ----------------
+  → ∃[ x ] (¬ B x)
+¬∀-implies-∃¬ ¬∀ = ⟨ {!!} , (λ x → ¬∀ {!!}) ⟩
+
+The converse is not true because we have not general way to 
+construct a term of type A for which ¬ B x holds
+-}

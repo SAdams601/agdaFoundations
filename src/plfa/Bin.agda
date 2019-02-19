@@ -78,3 +78,74 @@ from-to-id (suc n) =
 
 --The isomorphism ℕ≃Bin is not possible because to∘from
 --is not possible since to (from nil) ≡ x0 nil
+
+data One : Bin → Set
+data Can : Bin → Set
+
+
+data Can where
+
+  zero : Can (x0 nil)
+  can : ∀ {b : Bin} → One b → Can b
+
+data One where
+
+  one :
+    One (x1 nil) 
+
+  rex0 : ∀ {b : Bin} → One b → One (x0 b)
+  rex1 : ∀ {b : Bin} → One b → One (x1 b)
+  
+
+incCan : ∀ {b : Bin} → Can b → Can (inc b)
+incOne : ∀ {b : Bin} → One b → One (inc b)
+
+incOne one = rex0 one
+incOne (rex0 o) = rex1 o
+incOne (rex1 o) = rex0 (incOne o)
+
+incCan zero = can one
+incCan {b} (can x) = can (incOne x)
+
+
+toCan : ∀ (n : ℕ) → Can (to n)
+toCan zero = zero
+toCan (suc n) = incCan (toCan n)
+
+postulate
+  toFromOne : ∀ {b : Bin} → One b → to (from b) ≡ b
+
+
+toFromCan : ∀ {b : Bin} → Can b → to (from b) ≡ b
+
+{-
+toFromOne one = refl
+toFromOne ob with incOne ob
+toFromOne one | p = refl
+toFromOne (rex0 ob) | p = toFromOne {!!}
+toFromOne (rex1 ob) | p = toFromOne {!!}
+-}
+
+toFromCan zero = refl
+toFromCan (can x) = toFromOne x
+
+open import plfa.Isomorphism using (_≃_;extensionality)
+open import plfa.Quantifiers using (⟨_,_⟩;∃-syntax;∃-elim)
+
+to-CanBin : ℕ → ∃[ b ](Can b)
+to-CanBin x = ⟨ (to x) , (toCan x) ⟩
+
+from-CanBin : ∃[ b ](Can b) → ℕ
+from-CanBin = λ { x → ∃-elim (λ b _ → from b) x }
+
+postulate 
+  to∘from-lemma :  ∀ (y : ∃-syntax (λ b₁ → Can b₁))
+    → (to-CanBin) (from-CanBin y) ≡ y
+
+canBin-Iso-ℕ :  ℕ ≃ (∃[ b ] (Can b))
+canBin-Iso-ℕ = record
+  { to      = to-CanBin
+  ; from    = from-CanBin
+  ; from∘to = λ x → from-to-id x
+  ; to∘from = to∘from-lemma
+  }
