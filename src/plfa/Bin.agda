@@ -131,6 +131,7 @@ toFromCan (can x) = toFromOne x
 
 open import plfa.Isomorphism using (_≃_;extensionality)
 open import plfa.Quantifiers using (⟨_,_⟩;∃-syntax;∃-elim)
+open import Data.Product using (proj₁;proj₂)
 
 to-CanBin : ℕ → ∃[ b ](Can b)
 to-CanBin x = ⟨ (to x) , (toCan x) ⟩
@@ -138,9 +139,21 @@ to-CanBin x = ⟨ (to x) , (toCan x) ⟩
 from-CanBin : ∃[ b ](Can b) → ℕ
 from-CanBin = λ { x → ∃-elim (λ b _ → from b) x }
 
-postulate 
-  to∘from-lemma :  ∀ (y : ∃-syntax (λ b₁ → Can b₁))
+toFromx0 : ∀ {b : Bin} → to (from (x0 b)) ≡ (x0 b)
+toFromx0 = {!!}
+
+
+--prod-eq {x}{y}{m}{n} x≡y m≡n = begin
+  --                               ⟨ x , m ⟩ ≡⟨ cong (⟨_,_⟩ x) m≡n ⟩
+    --                             ⟨ x , .n ⟩ ≡⟨ cong (λ z → ⟨ z , .n ⟩) x≡y ⟩ ⟨ n , .n ⟩ 
+
+to∘from-lemma :  ∀ (y : ∃-syntax (λ b₁ → Can b₁))
     → (to-CanBin) (from-CanBin y) ≡ y
+to∘from-lemma ⟨ nil , can () ⟩
+to∘from-lemma ⟨ x0 .nil , zero ⟩ = refl
+to∘from-lemma ⟨ .(x1 nil) , can one ⟩ = refl
+to∘from-lemma ⟨ (x0 rst) , can (rex0 x) ⟩ =  {!!}
+to∘from-lemma ⟨ (x1 rst) , can (rex1 x) ⟩ = {!!}
 
 canBin-Iso-ℕ :  ℕ ≃ (∃[ b ] (Can b))
 canBin-Iso-ℕ = record
