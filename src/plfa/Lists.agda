@@ -9,6 +9,7 @@ open import Data.Nat.Properties using
   (+-assoc; +-identityˡ; +-identityʳ; *-assoc; *-identityˡ; *-identityʳ)
 open import Relation.Nullary using (¬_; Dec; yes; no)
 open import Data.Product using (_×_; ∃; ∃-syntax;proj₁;proj₂) renaming (_,_ to ⟨_,_⟩)
+open import Data.Sum using (_⊎_;inj₁;inj₂)
 open import Function using (_∘_)
 open import Level using (Level)
 open import plfa.Induction using (*-distrib-+;*-comm;+-comm;∸-+-assoc)
@@ -437,3 +438,101 @@ foldr-monoid-foldl {A}{B} _⊗_ e (x ∷ xs) ⊗-monoid =
 data All {A : Set} (P : A → Set) : List A → Set where
   [] : All P []
   _∷_ : ∀ {x : A} {xs : List A} → P x → All P xs → All P (x ∷ xs)
+
+data Any {A : Set} (P : A → Set) : List A → Set where
+  here  : ∀ {x : A} {xs : List A} → P x → Any P (x ∷ xs)
+  there : ∀ {x : A} {xs : List A} → Any P xs → Any P (x ∷ xs)
+
+infix 4 _∈_ _∉_
+
+_∈_ : ∀ {A : Set} (x : A) (xs : List A) → Set
+x ∈ xs = Any (x ≡_) xs
+
+_∉_ : ∀ {A : Set} (x : A) (xs : List A) → Set
+x ∉ xs = ¬ (x ∈ xs)
+
+All-++-≃ : ∀ {A : Set} {P : A → Set} (xs ys : List A) →
+  All P (xs ++ ys) ≃ (All P xs × All P ys)
+All-++-≃ xs ys =
+  record
+  { to      = to xs ys
+  ; from    = from xs ys
+  ; from∘to = λ Px → from∘to Px
+  ; to∘from = {!!}
+  }
+  where
+    to : ∀ {A : Set} {P : A → Set} (xs ys : List A) →
+      All P (xs ++ ys) → (All P xs × All P ys)
+    to [] ys Pys = ⟨ [] , Pys ⟩
+    to (x ∷ xs) ys (Px ∷ Pxs++ys) with to xs ys Pxs++ys
+    ... | ⟨ Pxs , Pys ⟩ = ⟨ (Px ∷ Pxs) , Pys ⟩
+
+    from : ∀ {A : Set} {P : A → Set} (xs ys : List A) →
+      All P xs × All P ys → All P (xs ++ ys)
+    from [] ys ⟨ [] , Pys ⟩ = Pys
+    from (x ∷ xs) ys ⟨ Px ∷ Pxs , Pys ⟩ = Px ∷ (from xs ys ⟨ Pxs , Pys ⟩)
+
+    from∘to : ∀ {A : Set} {P : A → Set} {xs ys : List A} →
+      (Px : All P (xs ++ ys)) → from xs ys (to xs ys Px) ≡ Px
+    from∘to {A} {P} {[]} {ys} Px = refl
+    from∘to {A} {P} {x ∷ xs} {ys} Px = 
+      begin
+        from (x ∷ xs) ys (to (x ∷ xs) ys Px)
+      ≡⟨⟩
+       {!!}
+      
+      
+Any-++-⇔ : ∀ {A : Set} {P : A → Set} (xs ys : List A) →
+  Any P (xs ++ ys) ⇔ (Any P xs ⊎ Any P ys)
+Any-++-⇔ xs ys =
+  record
+  { to = to xs ys
+  ; from = from xs ys
+  }
+  where
+
+    to : ∀ {A : Set} {P : A → Set} (xs ys : List A)
+      → Any P (xs ++ ys) → (Any P xs ⊎ Any P ys)
+    to [] ys Pxs++ys = inj₂ Pxs++ys
+    to (x ∷ xs) ys (here Px) = inj₁ (here Px)
+    to (x ∷ xs) ys (there Pxs++ys) with to xs ys Pxs++ys
+    ...| inj₁ Px = inj₁ (there Px)
+    ...| inj₂ Py = inj₂ Py
+
+    from : ∀ {A : Set} {P : A → Set} (xs ys : List A)
+      → (Any P xs ⊎ Any P ys) → Any P (xs ++ ys)
+    from [] ys (inj₁ ())
+    from [] ys (inj₂ Py) = Py
+    from (x ∷ xs) ys (inj₁ (here Px)) = here Px
+    from (x ∷ xs) ys (inj₁ (there Px)) = there (from xs ys (inj₁ Px))
+    from (x ∷ xs) ys (inj₂ Py) with from xs ys (inj₂ Py)
+    ...| Pxs++ys = there Pxs++ys
+
+
+_∘′_ : ∀ {ℓ₁ ℓ₂ ℓ₃ : Level} {A : Set ℓ₁} {B : Set ℓ₂} {C : Set ℓ₃}
+  → (B → C) → (A → B) → A → C
+(g ∘′ f) x  =  g (f x)
+
+¬Any≃All¬ : ∀ {A : Set} (P : A → Set) (xs : List A)
+  → (¬_ ∘′ Any P) xs ≃ All (¬_ ∘′ P) xs
+¬Any≃All¬ P xs =
+  record
+    { to      = λ{ NotAnyx → {!!} }
+    ; from    = {!!}
+    ; from∘to = {!!}
+    ; to∘from = {!!}
+    }
+
+
+all : ∀ {A : Set} → (A → Bool) → List A → Bool
+all p = foldr _∧_ true ∘ map p
+
+Decidable : ∀ {A : Set} → (A → Set) → Set
+Decidable {A} P = ∀ (x : A) → Dec (P x)
+
+All? : ∀ {A : Set} {P : A → Set} → Decidable P → Decidable (All P)
+All? P? [] = yes []
+All? P? (x ∷ xs) with P? x | All? P? xs
+...                  yes Px | yes Pxs = {!!}
+...                  no ¬Px | _       = ?
+...           
