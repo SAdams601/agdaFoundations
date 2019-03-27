@@ -533,6 +533,23 @@ Decidable {A} P = ∀ (x : A) → Dec (P x)
 All? : ∀ {A : Set} {P : A → Set} → Decidable P → Decidable (All P)
 All? P? [] = yes []
 All? P? (x ∷ xs) with P? x | All? P? xs
-...                  yes Px | yes Pxs = {!!}
-...                  no ¬Px | _       = ?
-...           
+...                | yes Px | yes Pxs = yes (Px ∷ Pxs)
+...                | no ¬Px | _       = no λ{ (Px ∷ Pxs) → ¬Px Px}
+...                | _      | no ¬Pxs = no λ{ (Px ∷ Pxs) → ¬Pxs Pxs}
+
+any : ∀ {A : Set} → (A → Bool) → List A → Bool
+any p = foldr _∨_ false ∘ map p
+
+Any? : ∀ {A : Set} {P : A → Set} → Decidable P → Decidable (Any P)
+Any? P? [] = no (λ ())
+Any? P? (x ∷ xs) with P? x | Any? P? xs
+...                | yes Px | _       = yes (here Px)
+...                | no  _  | yes Pxs = yes (there Pxs)
+...                | no ¬Px | no ¬Pxs = no λ{ (here x₁) → ¬Px x₁ ; (there x₁) → ¬Pxs x₁} 
+
+filter? : ∀ {A : Set} {P : A → Set}
+  → (P? : Decidable P) → List A → ∃[ ys ] (All P ys)
+filter? P? [] = ⟨ [] , [] ⟩
+filter? P? (x ∷ xs) with P? x | filter? P? xs
+...                    | yes Px | ⟨ xs′ , Pxs ⟩ = ⟨ x ∷ xs′ , Px ∷ Pxs ⟩
+...                    | no ¬p  | ⟨ xs′ , Pxs ⟩ = ⟨ xs′ , Pxs ⟩
