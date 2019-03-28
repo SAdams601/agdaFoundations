@@ -551,5 +551,5 @@ filter? : ∀ {A : Set} {P : A → Set}
   → (P? : Decidable P) → List A → ∃[ ys ] (All P ys)
 filter? P? [] = ⟨ [] , [] ⟩
 filter? P? (x ∷ xs) with P? x | filter? P? xs
-...                    | yes Px | ⟨ xs′ , Pxs ⟩ = ⟨ x ∷ xs′ , Px ∷ Pxs ⟩
-...                    | no ¬p  | ⟨ xs′ , Pxs ⟩ = ⟨ xs′ , Pxs ⟩
+...                   | yes Px | ⟨ xs′ , Pxs ⟩ = ⟨ x ∷ xs′ , Px ∷ Pxs ⟩
+...                   | no ¬p  | ⟨ xs′ , Pxs ⟩ = ⟨ xs′ , Pxs ⟩
