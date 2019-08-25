@@ -49,4 +49,43 @@ mul : Term
 mul = μ "*" ⇒ ƛ "m" ⇒ ƛ "n" ⇒
         case ` "m"
           [zero⇒ `zero
-          |suc "m" ⇒ plus · ` "n" · {! !} ]
+          |suc "m" ⇒ plus · ` "n" · ( ` "*" · ` "m" · ` "n") ]
+
+mulᶜ : Term
+mulᶜ = ƛ "m" ⇒ ƛ "n" ⇒ ƛ "s" ⇒ ƛ "z" ⇒
+   ` "m" · (plusᶜ · ` "m" · ` "n" · ` "s" · ` "z" )  
+
+ƛ′_⇒_ : Term → Term → Term
+ƛ′(` x) ⇒ N = ƛ x ⇒ N
+ƛ′ _ ⇒ _ = ⊥-elim impossible
+  where postulate impossible : ⊥
+
+case′_[zero⇒_|suc_⇒_] : Term → Term → Term → Term → Term
+case′ L [zero⇒ M |suc (` x) ⇒ N ] = case L [zero⇒ M |suc x ⇒ N ]
+case′ _ [zero⇒ _ |suc _ ⇒ _ ]     = ⊥-elim impossible
+  where postulate impossible : ⊥
+
+μ′_⇒_ : Term → Term → Term
+μ′ (` x) ⇒ N = μ x ⇒ N
+μ′ _ ⇒ _     = ⊥-elim impossible
+  where postulate impossible : ⊥
+
+plus′ : Term
+plus′ = μ′ + ⇒ ƛ′ m ⇒ ƛ′ n ⇒
+          case′ m
+            [zero⇒ n
+            |suc m ⇒ `suc (+ · m · n) ]
+        where
+          + = ` "+"
+          m = ` "m"
+          n = ` "n"
+
+mul′ : Term
+mul′ = μ′ * ⇒ ƛ′ m ⇒ ƛ′ n ⇒
+          case′ m
+            [zero⇒ `zero
+            |suc m ⇒ (plus′ · n · (* · m · n)) ]
+          where
+            * = ` "*"
+            m = ` "m"
+            n = ` "n"
