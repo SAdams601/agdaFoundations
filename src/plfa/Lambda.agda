@@ -2,7 +2,7 @@ module plfa.Lambda where
 
 open import Relation.Binary.PropositionalEquality using (_≡_; _≢_; refl)
 open import Data.String using (String)
-open import Data.String.Unsafe using (_≟_)
+open import Data.String.Properties using (_≟_)
 open import Data.Nat using (ℕ; zero; suc)
 open import Data.Empty using (⊥; ⊥-elim)
 open import Relation.Nullary using (Dec; yes; no; ¬_)
@@ -89,3 +89,38 @@ mul′ = μ′ * ⇒ ƛ′ m ⇒ ƛ′ n ⇒
             * = ` "*"
             m = ` "m"
             n = ` "n"
+
+data Value : Term → Set where
+
+  V-ƛ : ∀ {x N}
+  ---------------------
+    → Value (ƛ x ⇒ N)
+
+  V-zero :
+  -------------
+    Value `zero
+
+  V-suc : ∀ {V}
+    → Value V
+  -------------
+    → Value (`suc V)
+
+infix 9 _[_:=_]
+
+_[_:=_] : Term → Id → Term → Term
+(` x) [ y := V ] with x ≟ y
+... | yes _          = V
+... | no  _          = ` x 
+(ƛ x ⇒ N) [ y := V ] with x ≟ y
+... | yes _          = ƛ x ⇒ N
+... | no  _          = ƛ x ⇒ N [ y := V ]
+(L · M) [ y := V ]   = L [ y := V ] · M [ y := V ]
+(`zero) [ y := V ]   = `zero
+(`suc M) [ y := V ]  = `suc M [ y := V ]
+(case L [zero⇒ M |suc x ⇒ N ]) [ y := V ] with x ≟ y
+... | yes _          = case L [ y := V ] [zero⇒ M [ y := V ] |suc x ⇒ N ]
+... | no  _          =  case L [ y := V ] [zero⇒ M [ y := V ] |suc x ⇒ N [ y := V ] ]
+(μ x ⇒ N) [ y := V ] with x ≟ y
+... | yes _          = μ x ⇒ N
+... | no _           = μ x ⇒ N [ y := V ] 
+
