@@ -136,3 +136,17 @@ progress′ (case L [zero⇒ M |suc x ⇒ N ]) (⊢case ⊢L ⊢M ⊢N) with pro
 progress′ case .`zero [zero⇒ M |suc x ⇒ N ] (⊢case ⊢L ⊢M ⊢N) | inj₁ V-zero = inj₂ ⟨ M , β-zero ⟩
 progress′ case (`suc V) [zero⇒ M |suc x ⇒ N ] (⊢case ⊢L ⊢M ⊢N) | inj₁ (V-suc VL) = inj₂ ⟨ (N [ x := V ]) , (β-suc VL) ⟩
 progress′ (μ x ⇒ N) (⊢μ ⊢M) = inj₂ ⟨ N [ x := μ x ⇒ N ] , β-μ ⟩
+
+{-
+—→¬V : ∀ {M N}
+  → M —→ N
+    ---------
+  → ¬ Value M
+-}
+
+value? : ∀ {A M} → ∅ ⊢ M ∶ A → Dec (Value M)
+value? {A} {M} ⊢M with progress ⊢M
+... | done VM = yes VM
+... | step M—→N = no (—→¬V M—→N)
+
+
