@@ -137,16 +137,68 @@ progress′ case .`zero [zero⇒ M |suc x ⇒ N ] (⊢case ⊢L ⊢M ⊢N) | inj
 progress′ case (`suc V) [zero⇒ M |suc x ⇒ N ] (⊢case ⊢L ⊢M ⊢N) | inj₁ (V-suc VL) = inj₂ ⟨ (N [ x := V ]) , (β-suc VL) ⟩
 progress′ (μ x ⇒ N) (⊢μ ⊢M) = inj₂ ⟨ N [ x := μ x ⇒ N ] , β-μ ⟩
 
-{-
-—→¬V : ∀ {M N}
-  → M —→ N
-    ---------
-  → ¬ Value M
--}
-
 value? : ∀ {A M} → ∅ ⊢ M ∶ A → Dec (Value M)
 value? {A} {M} ⊢M with progress ⊢M
 ... | done VM = yes VM
 ... | step M—→N = no (—→¬V M—→N)
 
 
+ext : ∀ {Γ Δ}
+  → (∀ {x A}     → Γ ∋ x ∶ A         → Δ ∋ x ∶ A)
+  -------------------------------------
+  → (∀ {x y A B} → Γ , y ∶ B ∋ x ∶ A → Δ , y ∶ B ∋ x ∶ A)
+ext p Z = Z
+ext p (S x≢y ∋x) = S x≢y (p ∋x)
+
+rename : ∀ {Γ Δ}
+  → (∀ {x A} → Γ ∋ x ∶ A → Δ ∋ x ∶ A)
+  -------------------------------------
+  → (∀ {M A} → Γ ⊢ M ∶ A → Δ ⊢ M ∶ A)
+rename p (⊢` ∋x) = ⊢` (p ∋x)
+rename p (⊢ƛ ⊢N) = ⊢ƛ (rename (ext p) ⊢N)
+rename p (⊢L · ⊢M) = (rename p ⊢L) · (rename p ⊢M)
+rename p ⊢zero = ⊢zero
+rename p (⊢suc ⊢M) = ⊢suc (rename p ⊢M)
+rename p (⊢case ⊢L ⊢M ⊢N) = ⊢case (rename p ⊢L) (rename p ⊢M) (rename (ext p) ⊢N)
+rename p (⊢μ ⊢M) = ⊢μ (rename (ext p) ⊢M)
+
+weaken : ∀ {Γ M A}
+  → ∅ ⊢ M ∶ A
+    ----------
+  → Γ ⊢ M ∶ A
+weaken {Γ} ⊢M = rename ρ ⊢M
+  where
+  ρ : ∀ {z C}
+    → ∅ ∋ z ∶ C
+      ----------
+    → Γ ∋ z ∶ C
+  ρ () 
+
+drop : ∀ {Γ x M A B C}
+  → Γ , x ∶ A , x ∶ B ⊢ M ∶ C
+    -------------------------
+  → Γ , x ∶ B ⊢ M ∶ C
+drop {Γ} {x} {M} {A} {B} {C} ⊢M = rename ρ ⊢M
+  where
+  ρ : ∀ {z C}
+    → Γ , x ∶ A , x ∶ B ∋ z ∶ C
+      ------------------------
+    → Γ , x ∶ B ∋ z ∶ C 
+  ρ Z = Z
+  ρ (S x≢x Z) = ⊥-elim (x≢x refl)
+  ρ (S z≢x (S _ ∋z)) = S z≢x ∋z
+
+swap : ∀ {Γ x y M A B C}
+  → x ≢ y
+  → Γ , y ∶ B , x ∶ A ⊢ M ∶ C
+    -------------------------
+  → Γ , x ∶ A , y ∶ B ⊢ M ∶ C
+swap {Γ} {x} {y} {M} {A} {B} {C} x≢y ⊢M = rename {!!} ⊢M
+  where
+  ρ : ∀ {z C}
+   → Γ , y ∶ B , x ∶ A ∋ z ∶ C
+     -------------------------
+   → Γ , x ∶ A , y ∶ B ∋ z ∶ C
+  ρ Z = S x≢y Z
+  ρ (S y≢x Z) = Z
+  ρ (S z≢x (S z≢y ∋z)) = S z≢y (S z≢x ∋z)
