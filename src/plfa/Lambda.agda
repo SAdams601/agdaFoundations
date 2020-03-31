@@ -18,12 +18,12 @@ infix  8 `suc_
 infix  9 `_
 
 data Term : Set where
- `_                     : Id → Term
+ `_                    : Id → Term
  ƛ_⇒_                  : Id → Term → Term
- _·_                    : Term → Term → Term
- `zero                  : Term
- `suc_                  : Term → Term
- case_[zero⇒_|suc_⇒_] : Term → Term → Id → Term → Term
+ _·_                   : Term → Term → Term
+ `zero                 : Term
+ `suc_                 : Term → Term
+ case_[zero⇒_|suc_⇒_]  : Term → Term → Id → Term → Term
  μ_⇒_                  : Id → Term → Term
 
 two : Term

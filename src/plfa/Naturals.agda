@@ -1,5 +1,5 @@
 module plfa.Naturals where
-import Relation.Binary.PropositionalEquality as Eq
+import plfa.Equality as Eq
 open Eq using (_≡_; refl; cong; sym)
 open Eq.≡-Reasoning using (begin_; _≡⟨⟩_; _≡⟨_⟩_; _∎)
 

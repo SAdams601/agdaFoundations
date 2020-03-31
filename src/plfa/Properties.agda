@@ -228,10 +228,10 @@ subst {x = y} ⊢V (⊢μ {x = x} ⊢M) with x ≟ y
 ... | no x≢y   = ⊢μ (subst ⊢V (swap x≢y ⊢M))
 
 preserve : ∀ {M N A}
-  → ∅ ⊢ M ⦂ A
+  → ∅ ⊢ M ∶ A
   → M —→ N
     ----------
-  → ∅ ⊢ N ⦂ A
+  → ∅ ⊢ N ∶ A
 preserve (⊢` ())
 preserve (⊢ƛ ⊢N)                 ()
 preserve (⊢L · ⊢M)               (ξ-·₁ L—→L′)     =  (preserve ⊢L L—→L′) · ⊢M
