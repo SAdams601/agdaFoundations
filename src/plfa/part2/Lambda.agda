@@ -47,7 +47,7 @@ sucᶜ = ƛ "n" ⇒ ‵suc (‵ "n")
 mul : Term
 mul = μ "*" ⇒ (ƛ "m" ⇒ ƛ "n" ⇒
               case ‵ "m" [zero⇒ ‵zero
-              |suc "m" ⇒ plus · (‵ "n" · (‵ "*" · (‵ "m" · ‵ "n"))) ])
+              |suc "m" ⇒ plus · ‵ "n" · (‵ "*" · ‵ "m" · ‵ "n")])
 
 four : Term
 four = mul · (two · two)
@@ -237,7 +237,7 @@ data _—↠′_ : Term → Term → Set where
       -------
     → L —↠′ N
 
-open import plfa.Isomorphism using (_≲_)
+open import plfa.Isomorphism using (_≲_;_≃_)
 
 private —↠-trans : ∀ {L M N} → L —↠ M → M —↠ N → L —↠ N
         —↠-trans (_ ∎) L—↠N = L—↠N
@@ -342,8 +342,134 @@ _ = begin
          (ƛ "n" ⇒
           case ‵ "m" [zero⇒ ‵ "n" |suc "m" ⇒ ‵suc (‵ "+" · ‵ "m" · ‵ "n")
           ]))) · ‵ "m" · ‵suc ‵zero)]
-      —→⟨ ξ-suc β-zero ⟩ {!
+      —→⟨ ξ-suc β-zero ⟩ 
         ‵suc (‵suc ‵zero) ∎
-      !} 
-      
-    
+
+infixr 7 _⇒_
+
+data Type : Set where
+  _⇒_ : Type → Type → Type
+  ‵ℕ  : Type
+
+infixl 5 _,_∶_
+
+data Context : Set where
+  ∅     : Context
+  _,_∶_ : Context → Id → Type → Context
+
+open import Data.Product using (_×_;_,_)
+
+Context-≅ : Context ≃ List (Id × Type)
+Context-≅ = record
+  { to      = to
+  ; from    = from
+  ; from∘to = from∘to
+  ; to∘from = to∘from }
+  where
+    to : Context → List (Id × Type)
+    to ∅ = []
+    to (ctx , x ∶ ty) =  (x , ty) ∷ (to ctx)
+    from : List (Id × Type) → Context
+    from [] = ∅
+    from ((x , ty) ∷ lst) = (from lst) , x ∶ ty
+    from∘to : (x : Context) → from (to x) ≡ x
+    from∘to ∅ = refl
+    from∘to (ctx , x ∶ ty) rewrite from∘to ctx = refl
+    to∘from : (y : List (Id × Type)) → to (from y) ≡ y
+    to∘from [] = refl
+    to∘from (x ∷ lst) rewrite to∘from lst = refl
+
+infix 4 _∋_∶_
+
+data _∋_∶_ : Context → Id → Type → Set where
+
+  Z : ∀ {Γ x A}
+    -------------------
+    → Γ , x ∶ A ∋ x ∶ A
+
+  S : ∀ {Γ x y A B}
+    → x ≢ y
+    → Γ ∋ x ∶ A
+    -------------------
+    → Γ , y ∶ B ∋ x ∶ A
+
+infix 4 _⊢_∶_
+
+data _⊢_∶_ : Context → Term → Type → Set where
+
+  -- Axiom
+  ⊢‵ : ∀ {Γ x A}
+    → Γ ∋ x ∶ A
+    -------------
+    → Γ ⊢ ‵ x ∶ A
+
+  -- ⇒-I
+  ⊢ƛ : ∀ {Γ x N A B}
+    → Γ , x ∶ A ⊢ N ∶ B
+      ------------------
+    → Γ ⊢ ƛ x ⇒ N ∶ A ⇒ B
+
+  -- ⇒-E
+  _·_ : ∀ {Γ L M A B}
+    → Γ ⊢ L ∶ A ⇒ B
+    → Γ ⊢ M ∶ A
+    ----------------
+    → Γ ⊢ L · M ∶ B
+
+  -- ℕ-I₁
+  ⊢zero : ∀ {Γ}
+    -------------------
+      → Γ ⊢ ‵zero ∶ ‵ℕ
+
+  -- ℕ-I₁
+  ⊢suc : ∀ {Γ M}
+    → Γ ⊢ M ∶ ‵ℕ
+    -------------
+    → Γ ⊢ ‵suc M ∶ ‵ℕ
+
+  -- ℕ-E
+  ⊢case : ∀ {Γ L M x N A}
+    → Γ ⊢ L ∶ ‵ℕ
+    → Γ ⊢ M ∶ A
+    → Γ , x ∶ ‵ℕ ⊢ N ∶ A
+    ---------------------------------------
+    → Γ ⊢ case L [zero⇒ M |suc x ⇒ N ] ∶ A
+
+  ⊢μ : ∀ {Γ x M A}
+    → Γ , x ∶ A ⊢ M ∶ A
+      ------------------
+    → Γ ⊢ μ x ⇒ M ∶ A
+
+⊢two : ∀ {Γ} → Γ ⊢ two ∶ ‵ℕ
+⊢two = ⊢suc (⊢suc ⊢zero)
+
+⊢plus : ∀ {Γ} → Γ ⊢ plus ∶ ‵ℕ ⇒ ‵ℕ ⇒ ‵ℕ
+⊢plus = ⊢μ (⊢ƛ (⊢ƛ (⊢case (⊢‵ ∋m) (⊢‵ ∋n)
+        (⊢suc (⊢‵ ∋+ · ⊢‵ ∋m′ · ⊢‵ ∋n′)))))
+  where
+  ∋+  = (S (λ ()) (S (λ()) (S (λ()) Z)))
+  ∋m  = (S (λ ()) Z)
+  ∋n  = Z
+  ∋m′ = Z
+  ∋n′ = (S (λ()) Z)
+
+⊢2+2 : ∅ ⊢ plus · two · two ∶ ‵ℕ
+⊢2+2 = ⊢plus · ⊢two · ⊢two
+
+∋-injective : ∀ {Γ x A B} → Γ ∋ x ∶ A → Γ ∋ x ∶ B → A ≡ B
+∋-injective Z Z = refl
+∋-injective Z (S x≢ _) = ⊥-elim (x≢ refl)
+∋-injective (S x≢ _) Z = ⊥-elim (x≢ refl)
+∋-injective (S _ a) (S _ b) = ∋-injective a b
+
+_ : ∅ , "y" ∶ ‵ℕ ⇒ ‵ℕ , "x" ∶ ‵ℕ ⊢ ‵ "y" · ‵ "x" ∶ ‵ℕ
+_ = (⊢‵ (S (λ ()) Z)) · ⊢‵ Z
+
+⊢mul : ∀ {Γ} → Γ ⊢ mul ∶ ‵ℕ ⇒ ‵ℕ ⇒ ‵ℕ
+⊢mul = ⊢μ (⊢ƛ (⊢ƛ (⊢case (⊢‵ ∋m) ⊢zero
+  ((⊢plus · ⊢‵ ∋n) · (⊢‵ ∋* · ⊢‵ Z · ⊢‵ ∋n′)))))
+  where
+  ∋m  = S (λ ()) Z
+  ∋n  = S (λ ()) Z
+  ∋*  = S (λ ()) (S (λ ()) (S (λ ()) Z))
+  ∋n′ = S (λ ()) Z  
