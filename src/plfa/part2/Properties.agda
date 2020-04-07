@@ -149,3 +149,116 @@ value? : ∀ {A M} → ∅ ⊢ M ∶ A → Dec (Value M)
 value? ⊢M with progress ⊢M
 ... | done VM   = yes VM
 ... | step M→M′ = no (→¬V M→M′)
+
+ext : ∀ {Γ Δ}
+  → (∀ {x A} → Γ ∋ x ∶ A → Δ ∋ x ∶ A)
+    ----------------------------------
+  → (∀ {x y A B} → Γ , y ∶ B ∋ x ∶ A → Δ , y ∶ B ∋ x ∶ A)
+ext p Z = Z
+ext p (S x≢y ∋x) = S x≢y (p ∋x)
+
+
+rename : ∀ {Γ Δ}
+  → (∀ {x A} → Γ ∋ x ∶ A → Δ ∋ x ∶ A)
+    ---------------------------------
+  → (∀ {M A} → Γ ⊢ M ∶ A → Δ ⊢ M ∶ A)
+rename p (⊢‵ ∋M)          = ⊢‵ (p ∋M)
+rename p (⊢ƛ ⊢M)          = ⊢ƛ (rename (ext p) ⊢M)
+rename p (⊢L · ⊢M)        = (rename p ⊢L) · (rename p ⊢M)
+rename p ⊢zero            = ⊢zero
+rename p (⊢suc ⊢M)        = ⊢suc (rename p ⊢M)
+rename p (⊢case ⊢L ⊢M ⊢N) = ⊢case (rename p ⊢L) (rename p ⊢M) (rename (ext p) ⊢N)
+rename p (⊢μ ⊢M)          = ⊢μ (rename (ext p) ⊢M)
+
+weaken : ∀ {Γ M A}
+  → ∅ ⊢ M ∶ A
+    ----------
+  → Γ ⊢ M ∶ A
+weaken {Γ} ⊢M = rename p ⊢M
+  where
+    p : ∀ {z C}
+      → ∅ ∋ z ∶ C
+        ----------
+      → Γ ∋ z ∶ C
+    p ()
+
+drop : ∀ {Γ x M A B C}
+  → Γ , x ∶ A , x ∶ B ⊢ M ∶ C
+    --------------------------
+  → Γ , x ∶ B ⊢ M ∶ C
+drop {Γ} {x} {M} {A} {B} {C} ⊢M = rename p ⊢M
+  where
+    p : ∀ {z C}
+      → Γ , x ∶ A , x ∶ B ∋ z ∶ C
+        -------------------------
+      → Γ , x ∶ B ∋ z ∶ C
+    p Z                 = Z
+    p (S x≢x Z)         = ⊥-elim (x≢x refl)
+    p (S z≢x (S _ ∋z)) = S z≢x ∋z
+
+swap : ∀ {Γ x y M A B C}
+  → x ≢ y
+  → Γ , y ∶ B , x ∶ A ⊢ M ∶ C
+    --------------------------
+  → Γ , x ∶ A , y ∶ B ⊢ M ∶ C
+swap {Γ} {x} {y} {M} {A} {B} {C} x≢y ⊢M = rename p ⊢M
+  where
+    p : ∀ {z C}
+      → Γ , y ∶ B , x ∶ A ∋ z ∶ C
+    --------------------------
+      → Γ , x ∶ A , y ∶ B ∋ z ∶ C
+    p Z                    = S x≢y Z
+    p (S y≢x Z)            = Z
+    p (S z≢x (S z≢y ∋z))   = S z≢y (S z≢x ∋z)
+
+subst : ∀ {Γ x N V A B}
+  → ∅ ⊢ V ∶ A
+  → Γ , x ∶ A ⊢ N ∶ B
+    -------------------
+  → Γ ⊢ N [ x := V ] ∶ B
+subst {x = y} ⊢V (⊢‵ {x = x} Z) with  x ≟ y
+... | yes _ = weaken ⊢V
+... | no y≢y  = ⊥-elim (y≢y refl)
+subst {x = y} ⊢V (⊢‵ (S {x = x} x≢y ∋x)) with x ≟ y
+... | yes refl = ⊥-elim (x≢y refl)
+... | no  _    = ⊢‵ ∋x
+subst {x = y} ⊢V (⊢ƛ {x = x} ⊢N) with x ≟ y
+... | yes refl = ⊢ƛ (drop ⊢N)
+... | no x≢y     = ⊢ƛ (subst ⊢V (swap x≢y ⊢N))
+subst ⊢V (⊢M · ⊢N)           = (subst ⊢V ⊢M) · (subst ⊢V ⊢N)
+subst ⊢V ⊢zero               = ⊢zero
+subst ⊢V (⊢suc ⊢N)           = ⊢suc (subst ⊢V ⊢N)
+subst {x = y} ⊢V (⊢case {x = x} ⊢L ⊢M ⊢N) with x ≟ y
+... | yes refl = ⊢case (subst ⊢V ⊢L) (subst ⊢V ⊢M) (drop ⊢N)
+... | no x≢y   = ⊢case (subst ⊢V ⊢L) (subst ⊢V ⊢M) (subst ⊢V (swap x≢y ⊢N)) 
+subst {x = y} ⊢V (⊢μ {x = x} ⊢N) with x ≟ y
+... | yes refl = ⊢μ (drop ⊢N)
+... | no x≢y   = ⊢μ (subst ⊢V (swap x≢y ⊢N))
+
+subst-bind : ∀ {Γ V A B C N} → (x : Id) → (y : Id) → ∅ ⊢ V ∶ A → Γ , y ∶ A , x ∶ B ⊢ N ∶ C → Γ , x ∶ B ⊢ ([ x ≣ y ] V ↔ N) ∶ C
+
+subst′ : ∀ {Γ x N V A B}
+  → ∅ ⊢ V ∶ A
+  → Γ , x ∶ A ⊢ N ∶ B
+    ------------------
+  → Γ ⊢ N [ x := V ]′ ∶ B
+subst′ {x = y} ⊢V (⊢‵ {x = x} Z) with x ≟ y
+... | yes refl = weaken ⊢V
+... | no x≢y   = ⊥-elim (x≢y refl)
+subst′ {x = y} ⊢V (⊢‵ {x = x} (S x≢y ∋x)) with x ≟ y
+... | yes refl = ⊥-elim (x≢y refl)
+... | no _   = ⊢‵ ∋x
+subst′ ⊢V (⊢M · ⊢N) = subst′ ⊢V ⊢M · subst′ ⊢V ⊢N
+subst′ ⊢V ⊢zero     = ⊢zero
+subst′ ⊢V (⊢suc ⊢N) = ⊢suc (subst′ ⊢V ⊢N)
+subst′ {x = y} ⊢V (⊢case {x = x} ⊢L ⊢M ⊢N) = ⊢case (subst′ ⊢V ⊢L) (subst′ ⊢V ⊢M) (subst-bind x y ⊢V ⊢N)
+--Γ , x ∶ ‵ℕ ⊢ [ x ≣ y ] V ↔ N ∶ B
+subst′ {x = y} ⊢V (⊢μ {x = x} ⊢N) = ⊢μ (subst-bind x y ⊢V ⊢N)
+--Γ , x ∶ B ⊢ [ x ≣ y ] V ↔ M ∶ B
+subst′ {x = y} ⊢V (⊢ƛ {x = x} ⊢N) = ⊢ƛ (subst-bind x y ⊢V ⊢N)
+--Γ , x ∶ A ⊢ [ x ≣ y ] V ↔ N ∶ B
+
+
+subst-bind x y ⊢V ⊢N with x ≟ y
+... | yes refl = drop ⊢N
+... | no  x≢y  = subst′ ⊢V (swap x≢y ⊢N)
