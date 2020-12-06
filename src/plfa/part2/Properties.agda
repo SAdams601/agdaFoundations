@@ -262,3 +262,40 @@ subst′ {x = y} ⊢V (⊢ƛ {x = x} ⊢N) = ⊢ƛ (subst-bind x y ⊢V ⊢N)
 subst-bind x y ⊢V ⊢N with x ≟ y
 ... | yes refl = drop ⊢N
 ... | no  x≢y  = subst′ ⊢V (swap x≢y ⊢N)
+
+preserve : ∀ {M N A}
+ → ∅ ⊢ M ∶ A
+ → M —→ N
+ -------------
+ → ∅ ⊢ N ∶ A
+preserve (⊢L · ⊢M)        (ξ-·₁ L—→L′) = (preserve ⊢L L—→L′) · ⊢M
+preserve (⊢L · ⊢M)        (ξ-·₂ M—→M′) = ⊢L · (preserve ⊢M M—→M′)
+preserve ((⊢ƛ ⊢N) · ⊢V)   (β-ƛ VM) = subst ⊢V ⊢N
+preserve (⊢suc ⊢M)        (ξ-suc M—→M′) = ⊢suc (preserve ⊢M M—→M′)
+preserve (⊢case ⊢L ⊢M ⊢N) (ξ-case L—→L′) = ⊢case (preserve ⊢L L—→L′) ⊢M ⊢N
+preserve (⊢case ⊢L ⊢M ⊢N) (β-zero) = ⊢M
+preserve (⊢case (⊢suc ⊢L) ⊢M ⊢N) (β-suc VV) = subst ⊢L ⊢N
+preserve (⊢μ ⊢M) β-μ = subst (⊢μ ⊢M) ⊢M
+
+record Gas : Set where
+  constructor gas
+  field
+    amount : ℕ
+
+
+data Finished (ℕ : Term) : Set where
+
+  done :
+    Value ℕ
+    ---------
+    → Finished ℕ
+
+  out-of-gas :
+    -------------
+    Finished ℕ
+
+data Steps (L : Term) : Set where
+
+  steps : ∀ {N}
+    → L —↠ N
+    → Finished N
