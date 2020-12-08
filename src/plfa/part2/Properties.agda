@@ -91,7 +91,7 @@ progress (⊢ƛ M)        = done V-ƛ
 progress (M · N) with progress M
 ... | step M→M′        = step (ξ-·₁ M→M′)
 ... | done VM with progress N
-...    | step N→N′     = step (ξ-·₂ N→N′)
+...    | step N→N′     = step (ξ-·₂ VM N→N′)
 ...    | done VN with canonical M VM
 ...       | C-ƛ _      = step (β-ƛ VN)
 progress ⊢zero         = done V-zero
@@ -142,7 +142,7 @@ progress′ (μ x ⇒ M) ty = inj₂ ⟨ (M [ x := μ x ⇒ M ]) , β-μ ⟩
 progress′ (M · N) (tyM · tyN) with progress′ M tyM
 ... | inj₂ ⟨ M′ , M→M′ ⟩ = inj₂ ⟨ M′ · N , (ξ-·₁ M→M′) ⟩
 ... | inj₁ V-ƛ with progress′ N tyN
-... | inj₂ ⟨ N′ , N→N′ ⟩ = inj₂ ⟨ M · N′ , ξ-·₂ N→N′ ⟩
+... | inj₂ ⟨ N′ , N→N′ ⟩ = inj₂ ⟨ M · N′ , ξ-·₂ V-ƛ N→N′ ⟩
 progress′ ((ƛ x ⇒ B) · N) (tyM · tyN) | inj₁ V-ƛ | inj₁ VN = inj₂ ⟨ B [ x := N ] , (β-ƛ VN) ⟩
 
 value? : ∀ {A M} → ∅ ⊢ M ∶ A → Dec (Value M)
@@ -269,7 +269,7 @@ preserve : ∀ {M N A}
  -------------
  → ∅ ⊢ N ∶ A
 preserve (⊢L · ⊢M)        (ξ-·₁ L—→L′) = (preserve ⊢L L—→L′) · ⊢M
-preserve (⊢L · ⊢M)        (ξ-·₂ M—→M′) = ⊢L · (preserve ⊢M M—→M′)
+preserve (⊢L · ⊢M)        (ξ-·₂ VM M—→M′) = ⊢L · (preserve ⊢M M—→M′)
 preserve ((⊢ƛ ⊢N) · ⊢V)   (β-ƛ VM) = subst ⊢V ⊢N
 preserve (⊢suc ⊢M)        (ξ-suc M—→M′) = ⊢suc (preserve ⊢M M—→M′)
 preserve (⊢case ⊢L ⊢M ⊢N) (ξ-case L—→L′) = ⊢case (preserve ⊢L L—→L′) ⊢M ⊢N
@@ -299,3 +299,78 @@ data Steps (L : Term) : Set where
   steps : ∀ {N}
     → L —↠ N
     → Finished N
+  --------------
+    → Steps L
+
+eval : ∀ {L A}
+  → Gas
+  → ∅ ⊢ L ∶ A
+  -----------
+  → Steps L
+eval {L} (gas zero) ⊢L = steps (L ∎) out-of-gas
+eval {L} (gas (suc m)) ⊢L with progress ⊢L
+... | done VL = steps (L ∎) (done VL)
+... | step {M} L—→M with eval (gas m) (preserve ⊢L L—→M)
+...   | steps M—↠N fin = steps ( L —→⟨ L—→M ⟩ M—↠N) fin
+
+⊢sucμ : ∅ ⊢ μ "x" ⇒ ‵suc ‵ "x" ∶ ‵ℕ
+⊢sucμ = ⊢μ (⊢suc (⊢‵ ∋x))
+  where
+    ∋x = Z
+
+
+Normal : Term → Set
+Normal M = ∀ {N} → ¬ (M —→ N)
+
+Stuck : Term → Set
+Stuck M = Normal M × ¬ Value M
+
+unstuck : ∀ {M A}
+  → ∅ ⊢ M ∶ A
+  -----------
+  → ¬ (Stuck M)
+unstuck ⊢M with progress ⊢M
+... | step M—→N = λ (⟨ ¬M—→N , ¬VM ⟩) → ¬M—→N M—→N
+... | done VM   = λ (⟨ ¬M—→N , ¬VM ⟩) → ¬VM VM
+
+
+preserves : ∀ {M N A}
+  → ∅ ⊢ M ∶ A
+  → M —↠ N
+   ----------
+  → ∅ ⊢ N ∶ A
+preserves ⊢M (_ ∎) = ⊢M
+preserves ⊢L (_ —→⟨ L—→M ⟩ M—↠N) = preserves (preserve ⊢L L—→M) M—↠N
+
+wttdgs : ∀ {M N A}
+  → ∅ ⊢ M ∶ A
+  → M —↠ N
+  -----------
+  → ¬ (Stuck N)
+wttdgs ⊢M M—↠N = unstuck (preserves ⊢M M—↠N)
+
+cong₄ : ∀ {A B C D E : Set} (f : A → B → C → D → E)
+  {s w : A} {t x : B} {u y : C} {v z : D}
+  → s ≡ w → t ≡ x → u ≡ y → v ≡ z → f s t u v ≡ f w x y z
+cong₄ f refl refl refl refl = refl
+
+det : ∀ {M M′ M″}
+  → M —→ M′
+  → M —→ M″
+  ---------
+  → M′ ≡ M″
+det (ξ-·₁ L—→L′) (ξ-·₁ L—→L″) = cong₂ _·_ (det L—→L′ L—→L″) refl
+det (ξ-·₁ M—→M′) (ξ-·₂ VL M—→M″) = ⊥-elim (V¬→ VL M—→M′)
+det (ξ-·₂ VL M—→M′) (ξ-·₁ M—→M″) = ⊥-elim (V¬→ VL M—→M″)
+det (ξ-·₂ VL M—→M′) (ξ-·₂ x M—→M″) = cong₂ _·_ refl (det M—→M′ M—→M″)
+det (ξ-·₂ VL M—→M′) (β-ƛ x) = ⊥-elim (V¬→ x M—→M′)
+det (β-ƛ x) (ξ-·₂ x₁ M—→M″) = ⊥-elim (V¬→ x M—→M″)
+det (β-ƛ x) (β-ƛ x₁) = refl
+det (ξ-suc M—→M′) (ξ-suc M—→M″) = cong ‵suc_ (det M—→M′ M—→M″)
+det (ξ-case M—→M′) (ξ-case M—→M″) = cong₄ case_[zero⇒_|suc_⇒_] (det M—→M′ M—→M″) refl refl refl
+det (ξ-case M—→M′) (β-suc x) = ⊥-elim (V¬→ (V-suc x) M—→M′)
+det β-zero β-zero = refl
+det (β-suc x) (ξ-case M—→M″) = ⊥-elim (V¬→ (V-suc x) M—→M″)
+det (β-suc x) (β-suc x₁) = refl
+det β-μ β-μ = refl
+  
